@@ -1,0 +1,642 @@
+{
+  "per_show": {
+    "tinydesk_seventeen": {
+      "genre": "pop",
+      "A_naive": {
+        "weighted_f1": 0.9167268412750808,
+        "macro_f1": 0.7900452766817544,
+        "per_class": {
+          "Pre_Concert": {
+            "f1": 0.0,
+            "support": 0
+          },
+          "Performance": {
+            "f1": 0.9801938474504847,
+            "support": 1168
+          },
+          "MC_Talk": {
+            "f1": 0.8322496749024706,
+            "support": 393
+          },
+          "Applause": {
+            "f1": 0.5576923076923077,
+            "support": 114
+          },
+          "Intermission": {
+            "f1": 0.0,
+            "support": 0
+          },
+          "Ambient": {
+            "f1": 0.0,
+            "support": 0
+          }
+        },
+        "n": 1675
+      },
+      "B_hmm_only": {
+        "weighted_f1": 0.9451703873195821,
+        "macro_f1": 0.8540259671726841,
+        "per_class": {
+          "Pre_Concert": {
+            "f1": 0.0,
+            "support": 0
+          },
+          "Performance": {
+            "f1": 0.9847844463229078,
+            "support": 1168
+          },
+          "MC_Talk": {
+            "f1": 0.9072426937738246,
+            "support": 393
+          },
+          "Applause": {
+            "f1": 0.6700507614213197,
+            "support": 114
+          },
+          "Intermission": {
+            "f1": 0.0,
+            "support": 0
+          },
+          "Ambient": {
+            "f1": 0.0,
+            "support": 0
+          }
+        },
+        "n": 1675
+      },
+      "C_rules_only": {
+        "weighted_f1": 0.9323467511064127,
+        "macro_f1": 0.8471887663971397,
+        "per_class": {
+          "Pre_Concert": {
+            "f1": 0.0,
+            "support": 0
+          },
+          "Performance": {
+            "f1": 0.9801938474504847,
+            "support": 1168
+          },
+          "MC_Talk": {
+            "f1": 0.8559782608695653,
+            "support": 393
+          },
+          "Applause": {
+            "f1": 0.7053941908713693,
+            "support": 114
+          },
+          "Intermission": {
+            "f1": 0.0,
+            "support": 0
+          },
+          "Ambient": {
+            "f1": 0.0,
+            "support": 0
+          }
+        },
+        "n": 1675
+      },
+      "D_full": {
+        "weighted_f1": 0.9563795547830223,
+        "macro_f1": 0.8956761192913439,
+        "per_class": {
+          "Pre_Concert": {
+            "f1": 0.0,
+            "support": 0
+          },
+          "Performance": {
+            "f1": 0.9847844463229078,
+            "support": 1168
+          },
+          "MC_Talk": {
+            "f1": 0.9234828496042216,
+            "support": 393
+          },
+          "Applause": {
+            "f1": 0.7787610619469025,
+            "support": 114
+          },
+          "Intermission": {
+            "f1": 0.0,
+            "support": 0
+          },
+          "Ambient": {
+            "f1": 0.0,
+            "support": 0
+          }
+        },
+        "n": 1675
+      },
+      "n": 1675
+    },
+    "f_7ntJHYAmc": {
+      "genre": "jazz",
+      "A_naive": {
+        "weighted_f1": 0.745419457370589,
+        "macro_f1": 0.37392522066276124,
+        "per_class": {
+          "Pre_Concert": {
+            "f1": 0.0,
+            "support": 655
+          },
+          "Performance": {
+            "f1": 0.9810844892812106,
+            "support": 3894
+          },
+          "MC_Talk": {
+            "f1": 0.5761772853185596,
+            "support": 781
+          },
+          "Applause": {
+            "f1": 0.6577181208053691,
+            "support": 264
+          },
+          "Intermission": {
+            "f1": 0.0,
+            "support": 235
+          },
+          "Ambient": {
+            "f1": 0.02857142857142857,
+            "support": 138
+          }
+        },
+        "n": 5967
+      },
+      "B_hmm_only": {
+        "weighted_f1": 0.7563764468456302,
+        "macro_f1": 0.39794181526355477,
+        "per_class": {
+          "Pre_Concert": {
+            "f1": 0.0,
+            "support": 655
+          },
+          "Performance": {
+            "f1": 0.9845647773279351,
+            "support": 3894
+          },
+          "MC_Talk": {
+            "f1": 0.59765625,
+            "support": 781
+          },
+          "Applause": {
+            "f1": 0.8054298642533936,
+            "support": 264
+          },
+          "Intermission": {
+            "f1": 0.0,
+            "support": 235
+          },
+          "Ambient": {
+            "f1": 0.0,
+            "support": 138
+          }
+        },
+        "n": 5967
+      },
+      "C_rules_only": {
+        "weighted_f1": 0.9006854581723992,
+        "macro_f1": 0.651950302330084,
+        "per_class": {
+          "Pre_Concert": {
+            "f1": 0.9733542319749217,
+            "support": 655
+          },
+          "Performance": {
+            "f1": 0.9810844892812106,
+            "support": 3894
+          },
+          "MC_Talk": {
+            "f1": 0.8008825151682295,
+            "support": 781
+          },
+          "Applause": {
+            "f1": 0.7597535934291582,
+            "support": 264
+          },
+          "Intermission": {
+            "f1": 0.3680555555555555,
+            "support": 235
+          },
+          "Ambient": {
+            "f1": 0.02857142857142857,
+            "support": 138
+          }
+        },
+        "n": 5967
+      },
+      "D_full": {
+        "weighted_f1": 0.9163500161686859,
+        "macro_f1": 0.6937179681643793,
+        "per_class": {
+          "Pre_Concert": {
+            "f1": 0.9733542319749217,
+            "support": 655
+          },
+          "Performance": {
+            "f1": 0.9845647773279351,
+            "support": 3894
+          },
+          "MC_Talk": {
+            "f1": 0.8316939890710382,
+            "support": 781
+          },
+          "Applause": {
+            "f1": 0.8373101952277657,
+            "support": 264
+          },
+          "Intermission": {
+            "f1": 0.5353846153846153,
+            "support": 235
+          },
+          "Ambient": {
+            "f1": 0.0,
+            "support": 138
+          }
+        },
+        "n": 5967
+      },
+      "n": 5967
+    },
+    "boilerroom_fredagain_london": {
+      "genre": "electronic",
+      "A_naive": {
+        "weighted_f1": 0.9600990538628148,
+        "macro_f1": 0.635277152402734,
+        "per_class": {
+          "Pre_Concert": {
+            "f1": 0.0,
+            "support": 0
+          },
+          "Performance": {
+            "f1": 0.9866567828020756,
+            "support": 4076
+          },
+          "MC_Talk": {
+            "f1": 0.48192771084337344,
+            "support": 140
+          },
+          "Applause": {
+            "f1": 0.437246963562753,
+            "support": 79
+          },
+          "Intermission": {
+            "f1": 0.0,
+            "support": 0
+          },
+          "Ambient": {
+            "f1": 0.0,
+            "support": 0
+          }
+        },
+        "n": 4295
+      },
+      "B_hmm_only": {
+        "weighted_f1": 0.970057824003739,
+        "macro_f1": 0.7228074373800615,
+        "per_class": {
+          "Pre_Concert": {
+            "f1": 0.0,
+            "support": 0
+          },
+          "Performance": {
+            "f1": 0.9895641497851443,
+            "support": 4076
+          },
+          "MC_Talk": {
+            "f1": 0.6525423728813561,
+            "support": 140
+          },
+          "Applause": {
+            "f1": 0.5263157894736842,
+            "support": 79
+          },
+          "Intermission": {
+            "f1": 0.0,
+            "support": 0
+          },
+          "Ambient": {
+            "f1": 0.0,
+            "support": 0
+          }
+        },
+        "n": 4295
+      },
+      "C_rules_only": {
+        "weighted_f1": 0.9510740400805406,
+        "macro_f1": 0.5474146740511167,
+        "per_class": {
+          "Pre_Concert": {
+            "f1": 0.0,
+            "support": 0
+          },
+          "Performance": {
+            "f1": 0.9866567828020756,
+            "support": 4076
+          },
+          "MC_Talk": {
+            "f1": 0.18784530386740333,
+            "support": 140
+          },
+          "Applause": {
+            "f1": 0.467741935483871,
+            "support": 79
+          },
+          "Intermission": {
+            "f1": 0.0,
+            "support": 0
+          },
+          "Ambient": {
+            "f1": 0.0,
+            "support": 0
+          }
+        },
+        "n": 4295
+      },
+      "D_full": {
+        "weighted_f1": 0.9593267874601923,
+        "macro_f1": 0.6192285755122847,
+        "per_class": {
+          "Pre_Concert": {
+            "f1": 0.0,
+            "support": 0
+          },
+          "Performance": {
+            "f1": 0.9895641497851443,
+            "support": 4076
+          },
+          "MC_Talk": {
+            "f1": 0.29940119760479045,
+            "support": 140
+          },
+          "Applause": {
+            "f1": 0.5687203791469194,
+            "support": 79
+          },
+          "Intermission": {
+            "f1": 0.0,
+            "support": 0
+          },
+          "Ambient": {
+            "f1": 0.0,
+            "support": 0
+          }
+        },
+        "n": 4295
+      },
+      "n": 4295
+    },
+    "allofbach_bwv140": {
+      "genre": "classical",
+      "A_naive": {
+        "weighted_f1": 0.9854071966364075,
+        "macro_f1": 0.5473745624270712,
+        "per_class": {
+          "Pre_Concert": {
+            "f1": 0.0,
+            "support": 0
+          },
+          "Performance": {
+            "f1": 0.9947491248541422,
+            "support": 1706
+          },
+          "MC_Talk": {
+            "f1": 0.0,
+            "support": 0
+          },
+          "Applause": {
+            "f1": 0.0,
+            "support": 0
+          },
+          "Intermission": {
+            "f1": 0.0,
+            "support": 0
+          },
+          "Ambient": {
+            "f1": 0.09999999999999999,
+            "support": 18
+          }
+        },
+        "n": 1724
+      },
+      "B_hmm_only": {
+        "weighted_f1": 0.9843661428774361,
+        "macro_f1": 0.49737609329446064,
+        "per_class": {
+          "Pre_Concert": {
+            "f1": 0.0,
+            "support": 0
+          },
+          "Performance": {
+            "f1": 0.9947521865889213,
+            "support": 1706
+          },
+          "MC_Talk": {
+            "f1": 0.0,
+            "support": 0
+          },
+          "Applause": {
+            "f1": 0.0,
+            "support": 0
+          },
+          "Intermission": {
+            "f1": 0.0,
+            "support": 0
+          },
+          "Ambient": {
+            "f1": 0.0,
+            "support": 18
+          }
+        },
+        "n": 1724
+      },
+      "C_rules_only": {
+        "weighted_f1": 0.9854071966364075,
+        "macro_f1": 0.5473745624270712,
+        "per_class": {
+          "Pre_Concert": {
+            "f1": 0.0,
+            "support": 0
+          },
+          "Performance": {
+            "f1": 0.9947491248541422,
+            "support": 1706
+          },
+          "MC_Talk": {
+            "f1": 0.0,
+            "support": 0
+          },
+          "Applause": {
+            "f1": 0.0,
+            "support": 0
+          },
+          "Intermission": {
+            "f1": 0.0,
+            "support": 0
+          },
+          "Ambient": {
+            "f1": 0.09999999999999999,
+            "support": 18
+          }
+        },
+        "n": 1724
+      },
+      "D_full": {
+        "weighted_f1": 0.9843661428774361,
+        "macro_f1": 0.49737609329446064,
+        "per_class": {
+          "Pre_Concert": {
+            "f1": 0.0,
+            "support": 0
+          },
+          "Performance": {
+            "f1": 0.9947521865889213,
+            "support": 1706
+          },
+          "MC_Talk": {
+            "f1": 0.0,
+            "support": 0
+          },
+          "Applause": {
+            "f1": 0.0,
+            "support": 0
+          },
+          "Intermission": {
+            "f1": 0.0,
+            "support": 0
+          },
+          "Ambient": {
+            "f1": 0.0,
+            "support": 18
+          }
+        },
+        "n": 1724
+      },
+      "n": 1724
+    }
+  },
+  "pooled": {
+    "A_naive": {
+      "weighted_f1": 0.8618108808636618,
+      "macro_f1": 0.3703476033567071,
+      "per_class": {
+        "Pre_Concert": {
+          "f1": 0.0,
+          "support": 655
+        },
+        "Performance": {
+          "f1": 0.9852004581901489,
+          "support": 10844
+        },
+        "MC_Talk": {
+          "f1": 0.6251057827926656,
+          "support": 1314
+        },
+        "Applause": {
+          "f1": 0.5742793791574279,
+          "support": 457
+        },
+        "Intermission": {
+          "f1": 0.0,
+          "support": 235
+        },
+        "Ambient": {
+          "f1": 0.0375,
+          "support": 156
+        }
+      },
+      "n": 13661
+    },
+    "B_hmm_only": {
+      "weighted_f1": 0.8722737691132557,
+      "macro_f1": 0.3937520708742166,
+      "per_class": {
+        "Pre_Concert": {
+          "f1": 0.0,
+          "support": 655
+        },
+        "Performance": {
+          "f1": 0.9880521858548867,
+          "support": 10844
+        },
+        "MC_Talk": {
+          "f1": 0.6692715601451298,
+          "support": 1314
+        },
+        "Applause": {
+          "f1": 0.705188679245283,
+          "support": 457
+        },
+        "Intermission": {
+          "f1": 0.0,
+          "support": 235
+        },
+        "Ambient": {
+          "f1": 0.0,
+          "support": 156
+        }
+      },
+      "n": 13661
+    },
+    "C_rules_only": {
+      "weighted_f1": 0.9301831466873598,
+      "macro_f1": 0.6271289951546298,
+      "per_class": {
+        "Pre_Concert": {
+          "f1": 0.9247952345495161,
+          "support": 655
+        },
+        "Performance": {
+          "f1": 0.9852004581901489,
+          "support": 10844
+        },
+        "MC_Talk": {
+          "f1": 0.7750915750915751,
+          "support": 1314
+        },
+        "Applause": {
+          "f1": 0.6721311475409836,
+          "support": 457
+        },
+        "Intermission": {
+          "f1": 0.3680555555555555,
+          "support": 235
+        },
+        "Ambient": {
+          "f1": 0.0375,
+          "support": 156
+        }
+      },
+      "n": 13661
+    },
+    "D_full": {
+      "weighted_f1": 0.9425885775831222,
+      "macro_f1": 0.6720633183791952,
+      "per_class": {
+        "Pre_Concert": {
+          "f1": 0.9247952345495161,
+          "support": 655
+        },
+        "Performance": {
+          "f1": 0.9880521858548867,
+          "support": 10844
+        },
+        "MC_Talk": {
+          "f1": 0.8246823956442833,
+          "support": 1314
+        },
+        "Applause": {
+          "f1": 0.7594654788418709,
+          "support": 457
+        },
+        "Intermission": {
+          "f1": 0.5353846153846153,
+          "support": 235
+        },
+        "Ambient": {
+          "f1": 0.0,
+          "support": 156
+        }
+      },
+      "n": 13661
+    }
+  }
+}

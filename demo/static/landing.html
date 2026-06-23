@@ -1,0 +1,630 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>CueSheet: Live Demo of Multi-Genre Concert Segment Detection</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="assets/icon.svg" />
+  <meta name="description" content="CueSheet labels every second of a live concert with one of six content categories, causally, on a single CPU." />
+  <style>
+    /* ============ base ============ */
+    :root {
+      --bg: #0a0b10;
+      --panel: #12141d;
+      --text: #f2f4f8;
+      --muted: #8b93a7;
+      --accent: #ff7d3b;
+      --accent-2: #5ec8f8;
+      --perf: #ff6b4a; --mc: #ffd166; --app: #ff4f9a;
+      --pre: #5ec8f8; --inter: #9b7dff; --amb: #6b7385;
+      --max: 1060px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                   "Helvetica Neue", Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+    a { color: inherit; }
+    section { position: relative; }
+    .wrap { max-width: var(--max); margin: 0 auto; padding: 0 28px; }
+
+    /* ============ scroll reveal ============ */
+    .rv { opacity: 0; transform: translateY(36px); transition: opacity 0.9s cubic-bezier(.2,.65,.25,1), transform 0.9s cubic-bezier(.2,.65,.25,1); }
+    .rv.in { opacity: 1; transform: none; }
+    .rv.d1 { transition-delay: .12s; } .rv.d2 { transition-delay: .24s; }
+    .rv.d3 { transition-delay: .36s; } .rv.d4 { transition-delay: .48s; }
+    @media (prefers-reduced-motion: reduce) {
+      .rv { opacity: 1; transform: none; transition: none; }
+    }
+
+    /* ============ nav ============ */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 28px;
+      background: rgba(10, 11, 16, 0.6); backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .brand { font-weight: 700; letter-spacing: 0.02em; }
+    .brand em { color: var(--accent); font-style: normal; }
+    .nav-cta {
+      text-decoration: none; font-size: 14px; font-weight: 600;
+      background: var(--accent); color: #14100c;
+      padding: 8px 18px; border-radius: 999px;
+      transition: transform .2s ease, box-shadow .2s ease;
+    }
+    .nav-cta:hover { transform: translateY(-1px); box-shadow: 0 6px 22px rgba(255,125,59,.35); }
+
+    /* ============ hero ============ */
+    .hero {
+      min-height: 100svh; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; text-align: center;
+      padding: 120px 24px 80px; position: relative;
+    }
+    .hero .kicker {
+      font-size: 13px; letter-spacing: .22em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 26px;
+    }
+    .hero h1 {
+      font-size: clamp(40px, 7.2vw, 86px); line-height: 1.04;
+      font-weight: 800; letter-spacing: -0.025em; max-width: 15ch;
+      text-wrap: balance;
+    }
+    .hero h1 .grad {
+      background: linear-gradient(92deg, var(--accent) 10%, #ffc46b 50%, var(--accent-2) 95%);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .hero .lede {
+      margin-top: 28px; max-width: 56ch; font-size: clamp(16px, 2vw, 20px);
+      line-height: 1.65; color: var(--muted);
+     text-wrap: pretty; }
+    .hero .lede b { color: var(--text); font-weight: 600; }
+    .cta-row { margin-top: 40px; display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+    .cta {
+      text-decoration: none; font-weight: 600; font-size: 16px;
+      padding: 14px 30px; border-radius: 999px;
+      transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+    }
+    .cta.primary { background: var(--accent); color: #14100c; }
+    .cta.primary:hover { transform: translateY(-2px); box-shadow: 0 10px 34px rgba(255,125,59,.4); }
+    .cta.ghost { border: 1px solid rgba(255,255,255,.18); color: var(--text); }
+    .cta.ghost:hover { background: rgba(255,255,255,.06); }
+    .scroll-cue {
+      position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+      color: var(--muted); font-size: 12px; letter-spacing: .18em; text-transform: uppercase;
+      animation: bob 2.2s ease-in-out infinite;
+    }
+    @keyframes bob { 0%,100% { transform: translate(-50%, 0);} 50% { transform: translate(-50%, 8px);} }
+
+    /* live ticker under hero */
+    .ticker {
+      margin-top: 56px; display: flex; gap: 6px; align-items: flex-end;
+      height: 64px;
+    }
+    .ticker span {
+      display: block; width: 14px; border-radius: 4px 4px 0 0;
+      animation: pulse 1.8s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100% { transform: scaleY(.4);} 50% { transform: scaleY(1);} }
+
+    /* ============ section scaffolding ============ */
+    .sec { padding: 130px 0; }
+    .sec .label {
+      font-size: 13px; letter-spacing: .22em; text-transform: uppercase;
+      color: var(--accent); font-weight: 700; margin-bottom: 18px;
+    }
+    .sec h2 {
+      font-size: clamp(30px, 4.6vw, 52px); font-weight: 800;
+      letter-spacing: -0.02em; line-height: 1.1; max-width: 24ch;
+      text-wrap: balance;
+    }
+    .sec .sub { margin-top: 18px; color: var(--muted); font-size: 18px; line-height: 1.7; max-width: 64ch; text-wrap: pretty; }
+    .sec .sub b { color: var(--text); font-weight: 600; }
+
+    /* ============ problem ============ */
+    .quote-band {
+      margin-top: 56px; padding: 44px; border-radius: 22px;
+      background: linear-gradient(180deg, rgba(255,125,59,.09), rgba(255,125,59,.02));
+      border: 1px solid rgba(255,125,59,.18);
+      font-size: clamp(20px, 2.6vw, 28px); font-weight: 600; line-height: 1.5;
+    }
+    .quote-band .dim { color: var(--muted); font-weight: 400; }
+    .gapgrid { margin-top: 34px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    .gapcard {
+      background: var(--panel); border: 1px solid rgba(255,255,255,.07);
+      border-radius: 18px; padding: 26px;
+    }
+    .gapcard h3 { font-size: 17px; margin-bottom: 8px; }
+    .gapcard p { color: var(--muted); font-size: 15px; line-height: 1.65; }
+
+    /* ============ pipeline ============ */
+    .pipe-flow { margin-top: 64px; display: flex; align-items: stretch; gap: 0; }
+    .pstage {
+      flex: 1; background: var(--panel); border: 1px solid rgba(255,255,255,.08);
+      border-radius: 16px; padding: 22px 16px; text-align: center;
+    }
+    .pstage .t { font-weight: 700; font-size: 15px; }
+    .pstage .d { margin-top: 6px; color: var(--muted); font-size: 12.5px; line-height: 1.5; }
+    .parrow {
+      align-self: center; width: 44px; height: 2px; flex: none;
+      background: linear-gradient(90deg, rgba(255,125,59,.15), rgba(255,125,59,.8));
+      position: relative; margin: 0 4px;
+    }
+    .parrow::after {
+      content: ""; position: absolute; right: -1px; top: -4px;
+      border-left: 8px solid rgba(255,125,59,.8);
+      border-top: 5px solid transparent; border-bottom: 5px solid transparent;
+    }
+    .zerotrain {
+      margin-top: 36px; text-align: center; font-size: 19px; color: var(--muted);
+    }
+    .zerotrain b { color: var(--text); }
+
+    /* ============ six classes ============ */
+    .chips { margin-top: 52px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .chip {
+      border-radius: 18px; padding: 26px 22px;
+      border: 1px solid rgba(255,255,255,.08); background: var(--panel);
+    }
+    .chip .dot { width: 13px; height: 13px; border-radius: 50%; display: inline-block; margin-right: 9px; vertical-align: -1px; }
+    .chip h3 { display: inline; font-size: 17px; }
+    .chip p { margin-top: 10px; color: var(--muted); font-size: 14px; line-height: 1.6; }
+
+    /* ============ ribbon strip demo ============ */
+    .ribbon-demo { margin-top: 56px; }
+    .ribbon-demo .bar {
+      display: flex; height: 52px; border-radius: 12px; overflow: hidden;
+      border: 1px solid rgba(255,255,255,.1);
+    }
+    .ribbon-demo .seg { transform-origin: left; }
+    .ribbon-demo .legend { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 16px; color: var(--muted); font-size: 13px; }
+    .legend i { width: 10px; height: 10px; display: inline-block; border-radius: 3px; margin-right: 6px; }
+
+    /* ============ novelty table ============ */
+    .cmp { margin-top: 52px; width: 100%; border-collapse: separate; border-spacing: 0; }
+    .cmp th, .cmp td { padding: 18px 20px; text-align: left; font-size: 15.5px; }
+    .cmp thead th { color: var(--muted); font-size: 13px; letter-spacing: .1em; text-transform: uppercase; border-bottom: 1px solid rgba(255,255,255,.1); }
+    .cmp tbody td { border-bottom: 1px solid rgba(255,255,255,.06); color: var(--muted); }
+    .cmp tbody td:first-child { color: var(--text); font-weight: 600; }
+    .cmp tr.hl td { background: rgba(255,125,59,.08); color: var(--text); }
+    .cmp tr.hl td:first-child { color: var(--accent); }
+    .x { color: #ff5d5d; } .o { color: #58d68d; }
+
+    /* ============ numbers ============ */
+    .stats { margin-top: 60px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+    .stat {
+      background: var(--panel); border: 1px solid rgba(255,255,255,.08);
+      border-radius: 18px; padding: 30px 22px; text-align: center;
+    }
+    .stat .n { font-size: clamp(30px, 4vw, 46px); font-weight: 800; letter-spacing: -0.02em; }
+    .stat .n em { font-style: normal; color: var(--accent); }
+    .stat .l { margin-top: 8px; color: var(--muted); font-size: 13.5px; line-height: 1.5; }
+    .abl { margin-top: 56px; }
+    .abl .row { display: flex; align-items: center; gap: 18px; margin-bottom: 18px; }
+    .abl .name { width: 220px; flex: none; font-size: 14.5px; color: var(--muted); text-align: right; }
+    .abl .track { flex: 1; height: 30px; border-radius: 8px; background: rgba(255,255,255,.05); overflow: hidden; }
+    .abl .fill {
+      height: 100%; border-radius: 8px; width: 0;
+      background: linear-gradient(90deg, #7a4a32, var(--accent));
+      transition: width 1.4s cubic-bezier(.2,.65,.25,1);
+      display: flex; align-items: center; justify-content: flex-end;
+      font-size: 13px; font-weight: 700; padding-right: 10px; color: #14100c;
+    }
+    .abl .row.final .fill { background: linear-gradient(90deg, var(--accent), #ffc46b); }
+    .abl .row.causal .fill { background: linear-gradient(90deg, var(--accent-2, #4ea8ff), #8cc6ff); color: #06121f; }
+    .cmp-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .cmp { min-width: 640px; }
+    .honest { margin-top: 26px; color: var(--muted); font-size: 14px;  text-wrap: pretty; }
+
+    /* ============ dataset ============ */
+    .genres {
+      margin-top: 52px; display: grid; gap: 12px;
+      grid-template-columns: repeat(5, 1fr);
+    }
+    .genre {
+      font-family: inherit; color: inherit;
+      padding: 12px 10px; border-radius: 999px; font-size: 14.5px; font-weight: 600;
+      border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.03);
+      text-align: center; white-space: nowrap;
+    }
+    @media (max-width: 980px) { .genres { grid-template-columns: repeat(3, 1fr); } .genre { white-space: normal; } }
+    @media (max-width: 560px) { .genres { grid-template-columns: repeat(2, 1fr); } }
+    .genre { cursor: pointer; transition: border-color .25s ease, background .25s ease, transform .25s ease; }
+    .genre:hover { border-color: rgba(255,125,59,.5); transform: translateY(-2px); }
+    .genre.active { border-color: var(--accent); background: rgba(255,125,59,.12); color: var(--accent); }
+    .genre-ribbon { margin-top: 26px; }
+    .genre-ribbon .gr-cap { display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
+      color: var(--muted); font-size: 13.5px; margin-bottom: 10px; }
+    .genre-ribbon .gr-cap b { color: var(--text); font-size: 15px; }
+    .genre-ribbon .gr-bar { display: flex; height: 46px; border-radius: 11px; overflow: hidden;
+      border: 1px solid rgba(255,255,255,.1); }
+    .genre-ribbon .gr-bar div { transform-origin: left; }
+    .ds-note { margin-top: 30px; color: var(--muted); font-size: 15.5px; line-height: 1.7; max-width: 62ch; text-wrap: pretty; }
+    .ds-note b { color: var(--text); }
+
+    /* ============ interactivity ============ */
+    .acts { margin-top: 56px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+    .act {
+      background: var(--panel); border: 1px solid rgba(255,255,255,.08);
+      border-radius: 20px; padding: 30px;
+      transition: transform .3s ease, border-color .3s ease;
+    }
+    .act:hover { transform: translateY(-4px); border-color: rgba(255,125,59,.4); }
+    .act .num { font-size: 13px; font-weight: 700; color: var(--accent); letter-spacing: .12em; }
+    .act h3 { margin-top: 10px; font-size: 21px; }
+    .act p { margin-top: 10px; color: var(--muted); font-size: 15px; line-height: 1.65; }
+
+    /* ============ figure ============ */
+    .shot { margin-top: 60px; border-radius: 20px; overflow: hidden; border: 1px solid rgba(255,255,255,.1); box-shadow: 0 30px 80px rgba(0,0,0,.5); }
+    .shot img { width: 100%; display: block; }
+
+    /* ============ footer ============ */
+    footer { padding: 110px 0 70px; border-top: 1px solid rgba(255,255,255,.07); }
+    .authors { font-size: 17px; line-height: 1.8; }
+    .authors .aff { color: var(--muted); font-size: 14.5px; }
+    .foot-links { margin-top: 30px; display: flex; gap: 14px; flex-wrap: wrap; }
+    .review-note { margin-top: 36px; color: var(--muted); font-size: 13.5px; }
+
+    @media (max-width: 820px) {
+      .gapgrid, .chips, .acts { grid-template-columns: 1fr; }
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      .pipe-flow { flex-direction: column; gap: 10px; }
+      .parrow { display: none; }
+      .abl .name { width: 130px; font-size: 12.5px; }
+      .cmp th, .cmp td { padding: 12px 10px; font-size: 13.5px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="brand" style="display:flex;align-items:center"><img src="assets/icon.svg" alt="" width="22" height="22" style="display:block;margin-right:9px"/><span>Cue<em>Sheet</em></span></div>
+  <a class="nav-cta" href="cuesheet.html">Open the live demo →</a>
+</nav>
+
+<!-- ================= HERO ================= -->
+<header class="hero">
+  <div class="kicker rv">arXiv preprint</div>
+  <h1 class="rv d1">Every segment of a live concert,<br/><span class="grad">tracked second by second.</span></h1>
+  <p class="lede rv d2">
+    <b>CueSheet</b> labels every second of concert audio as
+    Pre-concert, Performance, MC talk, Applause, Intermission, or Ambient.
+    It runs <b>causally</b>, in the browser, <b>on a single CPU</b>, with no per-show training.
+  </p>
+  <div class="cta-row rv d3">
+    <a class="cta primary" href="cuesheet.html">Try the live demo</a>
+    <a class="cta ghost" href="https://github.com/yonghyunk1m/CueSheet" target="_blank" rel="noopener">Code &amp; dataset</a>
+  </div>
+  <div class="ticker rv d4" id="ticker" aria-hidden="true"></div>
+  <div class="scroll-cue">Scroll</div>
+</header>
+
+<!-- ================= 1. CONCEPT: PROBLEM ================= -->
+<section class="sec">
+  <div class="wrap">
+    <div class="label rv">The concept</div>
+    <h2 class="rv">Crews already plan cues around these moments.<br/>No existing system tracks them.</h2>
+    <p class="sub rv d1">
+      At a live concert, the production crew must anticipate every change of
+      content to trigger audio, lighting, and video cues. The show-level
+      segments they plan around (the lead-in, the songs, the talk between
+      them, the applause, the break) are exactly what CueSheet detects.
+    </p>
+    <div class="gapgrid">
+      <div class="gapcard rv">
+        <h3>Music structure analysis is offline</h3>
+        <p>It assumes a finished recording and segments <em>inside</em> a song
+        (verse, chorus, bridge). A live show needs labels while the audio
+        is still arriving.</p>
+      </div>
+      <div class="gapcard rv d1">
+        <h3>Score followers need a score</h3>
+        <p>Real-time alignment tracks a written score, which most pop,
+        jazz, and electronic concerts do not have.</p>
+      </div>
+    </div>
+    <div class="quote-band rv d2">
+      CueSheet extends music structure analysis
+      <span class="dim">from song-level sections to</span> concert-level segments,
+      <span class="dim">and runs it</span> live.
+    </div>
+  </div>
+</section>
+
+<!-- ================= 2. CONCEPT: ENGINEERING ================= -->
+<section class="sec">
+  <div class="wrap">
+    <div class="label rv">The engineering idea</div>
+    <h2 class="rv">Every component is pretrained or hand-crafted.</h2>
+    <p class="sub rv d1">
+      A frozen AudioSet encoder produces 527-class posteriors each second. A fixed
+      group mapping projects them onto four concert classes. An online causal
+      HMM smooths them with only past audio, and two short structural rules add
+      Pre-concert and Intermission. Steady-state latency is the 1-second hop.
+    </p>
+    <div class="pipe-flow">
+      <div class="pstage rv"><div class="t">Audio window</div><div class="d">10 s @ 32 kHz mono</div></div>
+      <div class="parrow rv"></div>
+      <div class="pstage rv d1"><div class="t">Encoder</div><div class="d">EfficientAT · PANN · AST · HTS-AT</div></div>
+      <div class="parrow rv d1"></div>
+      <div class="pstage rv d2"><div class="t">Group mapping</div><div class="d">527 AudioSet → 4 concert classes</div></div>
+      <div class="parrow rv d2"></div>
+      <div class="pstage rv d3"><div class="t">HMM + rules</div><div class="d">causal forward + 2 structural rules</div></div>
+      <div class="parrow rv d3"></div>
+      <div class="pstage rv d4"><div class="t">6-class segment</div><div class="d">one label per second</div></div>
+    </div>
+    <p class="zerotrain rv d4"><b>Zero training.</b> Swap the encoder with one click; the rest of the cascade does not change.<br/>The interface is AudioSet's 527 classes: any encoder that produces them drops in, so the pipeline improves whenever audio tagging does.</p>
+  </div>
+</section>
+
+<!-- ================= SIX CLASSES + RIBBON ================= -->
+<section class="sec">
+  <div class="wrap">
+    <div class="label rv">The taxonomy</div>
+    <h2 class="rv">Three acoustic events.<br/>Three structural positions.</h2>
+    <div class="chips">
+      <div class="chip rv"><span class="dot" style="background:var(--perf)"></span><h3>Performance</h3><p>Music is playing. The AudioSet music subtree carries it.</p></div>
+      <div class="chip rv d1"><span class="dot" style="background:var(--mc)"></span><h3>MC talk</h3><p>Spoken voice between songs: announcements, band intros.</p></div>
+      <div class="chip rv d2"><span class="dot" style="background:var(--app)"></span><h3>Applause</h3><p>Clapping, cheering, crowd response.</p></div>
+      <div class="chip rv"><span class="dot" style="background:var(--pre)"></span><h3>Pre-concert</h3><p>The lead-in before the first sustained performance run.</p></div>
+      <div class="chip rv d1"><span class="dot" style="background:var(--inter)"></span><h3>Intermission</h3><p>The sustained break between performance runs.</p></div>
+      <div class="chip rv d2"><span class="dot" style="background:var(--amb)"></span><h3>Ambient</h3><p>The non-active residual.</p></div>
+    </div>
+    <div class="ribbon-demo rv d3">
+      <div class="bar" id="ribbonbar"></div>
+      <div class="legend">
+        <span><i style="background:var(--pre)"></i>Pre-concert</span>
+        <span><i style="background:var(--perf)"></i>Performance</span>
+        <span><i style="background:var(--mc)"></i>MC talk</span>
+        <span><i style="background:var(--app)"></i>Applause</span>
+        <span><i style="background:var(--inter)"></i>Intermission</span>
+        <span><i style="background:var(--amb)"></i>Ambient</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 3. NOVELTY ================= -->
+<section class="sec">
+  <div class="wrap">
+    <div class="label rv">The novelty</div>
+    <h2 class="rv">What exists, and what was missing.</h2>
+    <div class="cmp-wrap">
+    <table class="cmp rv d1">
+      <thead>
+        <tr><th></th><th>Causal / live</th><th>Score-free</th><th>Concert-level segments</th><th>Open multi-genre data</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Music structure analysis</td><td class="x">✗ offline</td><td class="o">✓</td><td class="x">✗ song-level</td><td class="o">✓</td></tr>
+        <tr><td>Real-time score following</td><td class="o">✓</td><td class="x">✗ needs a score</td><td class="x">✗</td><td class="x">✗</td></tr>
+        <tr><td>AV event localization</td><td class="x">✗ offline</td><td class="o">✓</td><td class="x">✗ event-level</td><td class="o">✓</td></tr>
+        <tr class="hl"><td>CueSheet</td><td class="o">✓ 1 s hop</td><td class="o">✓</td><td class="o">✓ six segments</td><td class="o">✓ CONCERT-10</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+</section>
+
+<!-- ================= NUMBERS ================= -->
+<section class="sec">
+  <div class="wrap">
+    <div class="label rv">Measured</div>
+    <h2 class="rv">Each stage of the cascade is measured.</h2>
+    <p class="sub rv d1">Pooled weighted F1 across four hand-labeled shows
+      (pop, jazz, electronic, classical), against dense per-second human annotations.</p>
+    <div class="abl rv d2" id="abl">
+      <div class="row"><div class="name">Group-mapped argmax</div><div class="track"><div class="fill" data-w="86.2">86.2%</div></div></div>
+      <div class="row"><div class="name">+ HMM smoothing</div><div class="track"><div class="fill" data-w="87.2">87.2%</div></div></div>
+      <div class="row"><div class="name">+ structural rules</div><div class="track"><div class="fill" data-w="93.0">93.0%</div></div></div>
+      <div class="row final"><div class="name">Full pipeline</div><div class="track"><div class="fill" data-w="94.3">94.3%</div></div></div>
+      <div class="row causal"><div class="name">Full pipeline &middot; live (causal)</div><div class="track"><div class="fill" data-w="90.9">90.9%</div></div></div>
+    </div>
+    <div class="stats">
+      <div class="stat rv"><div class="n"><em>1 s</em></div><div class="l">steady-state latency (10 s cold-start)</div></div>
+      <div class="stat rv d1"><div class="n"><em>0.36 s</em></div><div class="l">to label a 30 s clip on a desktop CPU (default encoder)</div></div>
+      <div class="stat rv d2"><div class="n"><em>5 M</em></div><div class="l">parameters in the default encoder</div></div>
+      <div class="stat rv d3"><div class="n"><em>0</em></div><div class="l">parameters trained by us</div></div>
+    </div>
+    <p class="honest rv d3">Honest notes: the cascade bars are scored offline on the gallery tracks; the blue bar is the same pipeline run causally, as deployed live. That gap comes entirely from transitions, since a causal system cannot mark a segment change until it has heard one. The jazz show is the outlier. Its Intermission and MC-talk transitions are the hardest to track. These numbers come from a four-show evaluation pool, so read them as indicative, not a definitive benchmark.</p>
+  </div>
+</section>
+
+<!-- ================= 4. IMPACT ================= -->
+<section class="sec" id="dataset">
+  <div class="wrap">
+    <div class="label rv">The impact</div>
+    <h2 class="rv">CONCERT-10: open ground for the next system.</h2>
+    <p class="sub rv d1">
+      Released with the demo: <b>26 concerts, 22 hours, ten genres</b>, as a URL
+      manifest with per-second CueSheet-generated labels. We distribute links
+      and annotations under CC BY 4.0, not the source media. Four shows carry dense
+      hand-labeled ground truth for evaluation.
+    </p>
+    <div class="genres rv d2" id="genres">
+      <button class="genre" data-g="Pop">Pop</button><button class="genre" data-g="Hip-Hop / R&amp;B">Hip-Hop / R&amp;B</button>
+      <button class="genre" data-g="Rock / Alternative">Rock / Alternative</button><button class="genre" data-g="Country">Country</button>
+      <button class="genre" data-g="Latin">Latin</button><button class="genre" data-g="Dance / Electronic">Dance / Electronic</button>
+      <button class="genre" data-g="Christian / Gospel">Christian / Gospel</button><button class="genre" data-g="Jazz">Jazz</button>
+      <button class="genre" data-g="Classical">Classical</button><button class="genre" data-g="World / Cross-cultural">World / Cross-cultural</button>
+    </div>
+    <div class="genre-ribbon rv d3" id="genre-ribbon" hidden>
+      <div class="gr-cap"><b id="gr-show"></b><span>CueSheet segment track &middot; one second per slice &middot; <span id="gr-dur"></span></span></div>
+      <div class="gr-bar" id="gr-bar" aria-hidden="true"></div>
+    </div>
+    <p class="ds-note rv d3">
+      For the multimedia community this opens a measurable task between
+      song-level structure analysis and full production automation:
+      concert-level segment detection, with a zero-training baseline to beat
+      and applications in broadcast automation, archiving, and
+      automatic chaptering.
+    </p>
+  </div>
+</section>
+
+<!-- ================= 5. WHAT YOU'LL SEE + INTERACTIVITY ================= -->
+<section class="sec">
+  <div class="wrap">
+    <div class="label rv">At the demo</div>
+    <h2 class="rv">You drive it.</h2>
+    <div class="acts">
+      <div class="act rv"><div class="num">01</div><h3>Scrub the gallery</h3>
+        <p>Four hand-labeled concerts: pop, jazz, electronic, classical. Drag the
+        playhead; the segment badge, posterior bars, and ribbon follow every second.</p></div>
+      <div class="act rv d1"><div class="num">02</div><h3>Swap the encoder</h3>
+        <p>One click switches EfficientAT MN10, PANN CNN14, AST, or HTS-AT.
+        The ribbon recomputes and each encoder shows its own measured wF1, inline.</p></div>
+      <div class="act rv d2"><div class="num">03</div><h3>Bring your own audio</h3>
+        <p>Upload any recording, or just talk, play, and clap into the microphone.
+        The same causal pipeline a venue deployment would run labels it live.</p></div>
+      <div class="act rv d3"><div class="num">04</div><h3>Export the chapters</h3>
+        <p>Export the detected segments as YouTube-ready chapter timestamps or WebVTT
+        with one click.</p></div>
+    </div>
+    <figure class="shot rv d2">
+      <img src="assets/teaser.png?v=seg" alt="CueSheet demo interface: segment badge, per-second posterior, pipeline strip, and full-show segment ribbon." loading="lazy" />
+    </figure>
+  </div>
+</section>
+
+<!-- ================= FOOTER ================= -->
+<footer>
+  <div class="wrap">
+    <div class="authors rv">
+      Yonghyun Kim · Takuya Yamamoto · Ryuto Kikuchi · Alexander Lerch · Kazunobu Kondo<br/>
+      <span class="aff">Yamaha Corporation · Georgia Institute of Technology</span>
+    </div>
+    <div class="foot-links rv d1">
+      <a class="cta primary" href="cuesheet.html">Open the live demo</a>
+      <a class="cta ghost" href="https://github.com/yonghyunk1m/CueSheet" target="_blank" rel="noopener">Code repository</a>
+      <a class="cta ghost" href="https://github.com/yonghyunk1m/CueSheet/blob/main/data/CONCERT-10.tsv" target="_blank" rel="noopener">CONCERT-10 dataset</a>
+    </div>
+    <p class="review-note rv d2">
+      CueSheet: Live Demo of Multi-Genre Concert Segment Detection ·
+      arXiv preprint
+    </p>
+    <p class="review-note rv d3">Last updated: 2026-06-23 10:39 JST</p>
+  </div>
+</footer>
+
+<script>
+  // ---- scroll reveal ----
+  const io = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); }
+    }
+  }, { threshold: 0.18 });
+  document.querySelectorAll(".rv").forEach(el => io.observe(el));
+
+  // ---- hero ticker: segment-colored bars pulsing like the live posterior ----
+  (function () {
+    const palette = ["var(--perf)", "var(--perf)", "var(--mc)", "var(--perf)",
+                     "var(--app)", "var(--perf)", "var(--amb)", "var(--perf)",
+                     "var(--mc)", "var(--perf)", "var(--app)", "var(--perf)",
+                     "var(--inter)", "var(--perf)", "var(--perf)", "var(--app)"];
+    const tick = document.getElementById("ticker");
+    palette.forEach((c, i) => {
+      const s = document.createElement("span");
+      s.style.background = c;
+      s.style.height = (26 + ((i * 37) % 38)) + "px";
+      s.style.animationDelay = (i * 0.13) + "s";
+      tick.appendChild(s);
+    });
+  })();
+
+  // ---- taxonomy ribbon: a stylized one-show segment track ----
+  (function () {
+    const segs = [
+      ["var(--pre)", 9], ["var(--perf)", 22], ["var(--app)", 3], ["var(--mc)", 5],
+      ["var(--perf)", 18], ["var(--app)", 3], ["var(--inter)", 8],
+      ["var(--perf)", 20], ["var(--app)", 4], ["var(--mc)", 3], ["var(--amb)", 5],
+    ];
+    const bar = document.getElementById("ribbonbar");
+    segs.forEach(([c, w], i) => {
+      const d = document.createElement("div");
+      d.className = "seg";
+      d.style.background = c;
+      d.style.width = w + "%";
+      d.style.transform = "scaleX(0)";
+      d.style.transition = `transform .7s ${0.08 * i}s cubic-bezier(.2,.65,.25,1)`;
+      bar.appendChild(d);
+    });
+    const ro = new IntersectionObserver((es) => {
+      es.forEach(e => {
+        if (e.isIntersecting) {
+          bar.querySelectorAll(".seg").forEach(s => s.style.transform = "scaleX(1)");
+          ro.disconnect();
+        }
+      });
+    }, { threshold: 0.4 });
+    ro.observe(bar);
+  })();
+
+  // ---- genre chips: click to preview one labeled show per genre ----
+  (function () {
+    const COLORS = ["var(--pre)", "var(--perf)", "var(--mc)",
+                    "var(--app)", "var(--inter)", "var(--amb)"];
+    const box = document.getElementById("genre-ribbon");
+    const bar = document.getElementById("gr-bar");
+    const cap = document.getElementById("gr-show");
+    const dur = document.getElementById("gr-dur");
+    let DATA = null;
+    async function load() {
+      if (DATA) return DATA;
+      const r = await fetch("data/genre_ribbons.json");
+      DATA = r.ok ? await r.json() : {};
+      return DATA;
+    }
+    function fmt(n) {
+      const m = Math.round(n / 60);
+      return m >= 60 ? `${Math.floor(m/60)} h ${m%60} min` : `${m} min`;
+    }
+    async function show(g, btn) {
+      const data = await load();
+      const d = data[g];
+      if (!d) return;
+      document.querySelectorAll("#genres .genre").forEach(b => b.classList.toggle("active", b === btn));
+      cap.textContent = d.show;
+      dur.textContent = fmt(d.n);
+      bar.innerHTML = "";
+      d.segs.forEach(([cls, len], i) => {
+        const el = document.createElement("div");
+        el.style.background = COLORS[cls] || "var(--amb)";
+        el.style.width = (100 * len / d.n) + "%";
+        el.style.transform = "scaleX(0)";
+        el.style.transition = `transform .5s ${Math.min(i * 0.04, 0.8)}s cubic-bezier(.2,.65,.25,1)`;
+        bar.appendChild(el);
+      });
+      box.hidden = false;
+      requestAnimationFrame(() =>
+        bar.querySelectorAll("div").forEach(s => s.style.transform = "scaleX(1)"));
+    }
+    document.querySelectorAll("#genres .genre").forEach(b =>
+      b.addEventListener("click", () => show(b.dataset.g, b)));
+    // Preselect Pop when the section scrolls into view.
+    const first = document.querySelector('#genres .genre[data-g="Pop"]');
+    const ro = new IntersectionObserver((es) => {
+      es.forEach(e => { if (e.isIntersecting) { show("Pop", first); ro.disconnect(); } });
+    }, { threshold: 0.5 });
+    ro.observe(document.getElementById("genres"));
+  })();
+
+  // ---- ablation bars animate to width on reveal ----
+  (function () {
+    const abl = document.getElementById("abl");
+    const ro = new IntersectionObserver((es) => {
+      es.forEach(e => {
+        if (e.isIntersecting) {
+          abl.querySelectorAll(".fill").forEach(f => { f.style.width = f.dataset.w + "%"; });
+          ro.disconnect();
+        }
+      });
+    }, { threshold: 0.4 });
+    ro.observe(abl);
+  })();
+</script>
+</body>
+</html>

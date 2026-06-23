@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.venv/
+.pytest_cache/
+
+# Editors
+.vscode/
+.idea/
+.DS_Store
+
+# Data & artifacts (kept out of git, synced separately)
+data/raw/
+data/video/
+data/processed/
+data/sessions/
+features/
+checkpoints/
+runs/
+*.pt
+*.ckpt
+*.npz
+# ...except the released CONCERT-10 v1.0 per-second labels (CC BY 4.0)
+!data/labels/bootstrap/*.npz
+!data/labels/human/*.npz
+
+# Audio/video (paper uses external URLs in the manifest, not bundled media)
+*.wav
+*.mp3
+*.mp4
+*.mkv
+
+# Per-encoder gallery JSONs are precomputed by scripts/multi_encoder_precompute.py
+# and live in the HF Space, not in this repo
+
+# Vendored EfficientAT (cloned at build/run time, see demo/Dockerfile)
+vendor/

@@ -1,0 +1,54 @@
+[
+  {
+    "show_id": "tinydesk_seventeen",
+    "label": "NPR Tiny Desk \u2014 SEVENTEEN",
+    "genre": "Pop",
+    "n_seconds": 1675,
+    "has_segment_track": true,
+    "audio_filename": "tinydesk_seventeen.mp3",
+    "excerpt_start_sec": 1553,
+    "excerpt_duration_sec": 30,
+    "source_host": "YouTube",
+    "source_url": "https://www.youtube.com/watch?v=M74ypT_XdM4",
+    "source_channel": "NPR Music"
+  },
+  {
+    "show_id": "f_7ntJHYAmc",
+    "label": "Georgia Tech Jazz Concert",
+    "genre": "Jazz",
+    "n_seconds": 6001,
+    "has_segment_track": true,
+    "audio_filename": "f_7ntJHYAmc.mp3",
+    "excerpt_start_sec": 1122,
+    "excerpt_duration_sec": 30,
+    "source_host": "YouTube",
+    "source_url": "https://www.youtube.com/watch?v=f_7ntJHYAmc",
+    "source_channel": "Georgia Tech School of Music"
+  },
+  {
+    "show_id": "allofbach_bwv140",
+    "label": "J.S. Bach \u2014 Cantata BWV 140",
+    "genre": "Classical",
+    "n_seconds": 1728,
+    "has_segment_track": true,
+    "audio_filename": "allofbach_bwv140.mp3",
+    "excerpt_start_sec": 521,
+    "excerpt_duration_sec": 30,
+    "source_host": "YouTube",
+    "source_url": "https://www.youtube.com/watch?v=DqZE54i-muE",
+    "source_channel": "Netherlands Bach Society \u2014 All of Bach"
+  },
+  {
+    "show_id": "boilerroom_fredagain_london",
+    "label": "Boiler Room \u2014 Fred again..",
+    "genre": "Electronic / Dance",
+    "n_seconds": 4295,
+    "has_segment_track": true,
+    "audio_filename": "boilerroom_fredagain_london.mp3",
+    "excerpt_start_sec": 2731,
+    "excerpt_duration_sec": 30,
+    "source_host": "YouTube",
+    "source_url": "https://www.youtube.com/watch?v=c0-hvjV2A5Y",
+    "source_channel": "Boiler Room"
+  }
+]

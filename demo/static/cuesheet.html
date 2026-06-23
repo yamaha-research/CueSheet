@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>CueSheet — Multi-Genre Concert Segment Detection</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="assets/icon.svg" />
+  <link rel="stylesheet" href="style.css?v=2026-06-12-1839JST-mm33" />
+</head>
+<body>
+<div id="stage">
+  <header>
+    <div class="hdr-text">
+      <h1><img src="assets/icon.svg" alt="" width="26" height="26" style="vertical-align:-3px;margin-right:8px"/>Cue<span class="brand-em">Sheet</span> <small data-i18n="hdr.tagline">Multi-genre concert segment detection &middot; live demo</small></h1>
+      <p class="tag" id="header-tag">Yamaha Corporation &times; Georgia Institute of Technology &middot; <a href="https://github.com/yonghyunk1m/CueSheet/blob/main/data/CONCERT-10.tsv" target="_blank" rel="noopener" style="color:inherit" title="CONCERT-10 v1.0 — URL manifest + per-second labels (CC BY 4.0)">CONCERT-10 dataset</a></p>
+    </div>
+    <div class="hdr-aux">
+      <video id="video" controls preload="metadata" class="hdr-monitor" style="display:none"></video>
+      <a href="/about" class="hdr-btn" title="About CueSheet — concept, novelty, dataset, and what this demo shows">&#9432;&nbsp;About</a>
+      <button type="button" id="theme-btn" class="hdr-btn" data-i18n-title="btn.theme.title" title="Toggle light / dark theme">&#9728;&nbsp;Light</button>
+      <button type="button" id="fit-btn"   class="hdr-btn" data-i18n-title="btn.fit.title"   title="Fit mode: Width fills the window (vertical scroll OK) / Screen caps height so everything fits one screen (no scroll). Applies whether or not you are fullscreen.">&#8596;&nbsp;Width</button>
+      <button type="button" id="fs-btn"    class="hdr-btn" data-i18n-title="btn.fs.title"    title="Fullscreen (press F)">&#9974;&nbsp;Fullscreen</button>
+      <button type="button" id="lang-btn"  class="hdr-btn" data-i18n-title="btn.lang.title"  title="Switch language (English / 日本語 / 한국어)">EN</button>
+    </div>
+  </header>
+
+  <section class="picker">
+    <label for="show" data-i18n="pick.show">Show</label>
+    <select id="show"></select>
+    <span id="genre" class="badge"></span>
+    <a id="source-btn" class="hdr-btn source-btn" target="_blank"
+       rel="noopener noreferrer" hidden
+       title="Open the original source recording in a new tab">
+      <span id="source-btn-text">Source</span><span id="source-btn-icon">&nearr;</span>
+    </a>
+    <span class="modepick" data-i18n-title="pick.mode.title" title="Precomputed: replay the stored segment track. Causal: recompute from the playhead, as the online pipeline would.">
+      <button type="button" id="mode-pre"    class="mode-btn active">Precomputed</button>
+      <button type="button" id="mode-causal" class="mode-btn"        data-i18n="pick.mode.causal" hidden>Causal from playhead</button>
+    </span>
+    <span class="spacer"></span>
+    <span class="livepick" id="livepick" data-i18n-title="pick.live.title" title="Live capture: pick what to feed the pipeline before clicking record.">
+      <button type="button" id="live-btn"      class="live-btn" data-mode="audio"><span class="live-dot">&#9679;</span>&nbsp;<span data-i18n="pick.live.audio">Audio</span></button>
+    </span>
+    <label class="upload" data-i18n-title="pick.upload.title" title="Upload an audio file to run the pipeline on">
+      <input type="file" id="upload" accept="audio/*" hidden />
+      <span data-i18n="pick.upload.label">Upload</span>
+    </label>
+  </section>
+  <div class="status-row">
+    <span id="upload-status" class="muted"></span>
+  </div>
+
+  <section id="media-wrap" class="player">
+    <!-- audio playback; video uploads play in the small header monitor -->
+    <audio id="audio" controls preload="metadata"></audio>
+    <!-- live mic UX: real-time waveform of the mic input while recording,
+         then a playback element bound to the captured WAV after stop -->
+    <canvas id="live-waveform" class="live-waveform" hidden></canvas>
+    <audio id="live-playback" controls preload="metadata" class="live-playback" hidden></audio>
+    <div id="audible-hint" class="audible-hint" hidden>&#128266; Audible window: <span id="audible-hint-range"></span></div>
+  </section>
+
+  <!-- ===== Pipeline visualization: encoder -> group map -> HMM + rules. ===== -->
+  <section class="pipeline" id="pipeline">
+    <div class="pipe-stage" id="pipe-audio">
+      <div class="pipe-title" data-i18n="pipe.audio.title">Audio window</div>
+      <div class="pipe-detail" id="pipe-audio-detail">10 s @ 32 kHz mono</div>
+    </div>
+    <div class="pipe-arrow"><span class="pipe-dot"></span></div>
+    <div class="pipe-stage" id="pipe-pann">
+      <div class="pipe-title" id="pipe-enc-title">EfficientAT MN10</div>
+      <div class="pipe-detail" id="pipe-enc-detail">5 M params · 527-class AudioSet</div>
+      <div class="encoder-menu" id="encoder-menu" hidden>
+        <div class="encoder-menu-head" data-i18n="pipe.enc.menuHead">AudioSet encoder</div>
+        <button class="encoder-opt" data-enc="efficientat">EfficientAT MN10
+          <span>5 M params · 10 s @ 32 kHz · 🐇 ≈ real time on CPU</span></button>
+        <button class="encoder-opt" data-enc="pann">PANN CNN14
+          <span>81 M params · 2 s @ 16 kHz · 🐢 ~3× slower than real time</span></button>
+        <button class="encoder-opt" data-enc="ast">AST
+          <span>87 M params · 10 s @ 16 kHz · 🐢 ~3× slower than real time</span></button>
+        <button class="encoder-opt" data-enc="htsat">HTS-AT
+          <span>31 M params · 10 s @ 32 kHz · 🐇 ≈ real time on CPU</span></button>
+      </div>
+    </div>
+    <div class="pipe-arrow"><span class="pipe-dot"></span></div>
+    <div class="pipe-stage" id="pipe-group">
+      <div class="pipe-title" data-i18n="pipe.group.title">Group mapping</div>
+      <div class="pipe-detail" data-i18n="pipe.group.detail">4 concert classes</div>
+    </div>
+    <div class="pipe-arrow"><span class="pipe-dot"></span></div>
+    <div class="pipe-stage" id="pipe-heur">
+      <div class="pipe-title" data-i18n="pipe.heur.title">HMM smoothing + heuristic</div>
+      <div class="pipe-detail" data-i18n="pipe.heur.detail">Causal forward + heuristics</div>
+    </div>
+    <div class="pipe-arrow"><span class="pipe-dot"></span></div>
+    <div class="pipe-stage" id="pipe-out">
+      <div class="pipe-title" data-i18n="pipe.out.title">6-class segment</div>
+      <div class="pipe-detail" id="pipe-out-detail">—</div>
+    </div>
+  </section>
+
+  <details class="howitworks">
+    <summary data-i18n="how.summary">How does the live inference actually work?</summary>
+    <div class="howitworks-body">
+      <p data-i18n-html="how.window"><strong>Per-second sliding window.</strong> Each second <em>t</em>, the audio encoder consumes the trailing 10&nbsp;s of audio (window <em>[t-9,&nbsp;t+1]</em>) and emits one prediction. There is no peek into the future — only what the system has actually heard.</p>
+      <p data-i18n-html="how.p2"><strong>Cold start.</strong> At the very first second after a jump or session start, only ~1&nbsp;s of real audio is available; the encoder window is left-padded with silence. Expect the first ~5-10&nbsp;s of predictions to be biased toward whatever the encoder reports for mostly-silent input (often Ambient) before the trailing buffer fills.</p>
+      <p data-i18n-html="how.p3"><strong>HMM memory.</strong> The 4-class encoder posterior is smoothed by an online causal HMM forward pass (stay&nbsp;=&nbsp;0.95). The HMM carries one floating-point state vector (<em>alpha</em>) across seconds — this is the only thing the live system "remembers". On a jump or mode switch, <em>alpha</em> is reset to a uniform prior so no memory leaks across sessions.</p>
+      <p data-i18n-html="how.p4"><strong>Heuristics.</strong> Two of the six classes — Pre-concert and Intermission — are not encoder outputs; they're temporal rules applied on top of the smoothed segment track (first sustained run of Performance ends the pre-concert lead-in; long low-activity gaps between Performance segments are intermissions).</p>
+    </div>
+  </details>
+
+  <section class="panels">
+    <div class="card now">
+      <div class="card-label" data-i18n="card.now.label">Current segment</div>
+      <div id="segment-now" class="segment-now">&mdash;</div>
+      <div id="time-now" class="muted">t = 0 s</div>
+      <details class="segment-criteria">
+        <summary>What each segment means &nbsp;<span class="muted">(class criteria)</span></summary>
+        <div class="segment-criteria-body">
+          <div class="segment-criteria-row"><span class="pcr-key bg-performance">Performance</span><span class="pcr-val">A programmed piece is being played. Any pitched musical content (instrument or sung voice with accompaniment).</span></div>
+          <div class="segment-criteria-row"><span class="pcr-key bg-mc">MC_Talk</span><span class="pcr-val">One person addresses the audience over a microphone. Single-speaker speech, music absent or strongly attenuated.</span></div>
+          <div class="segment-criteria-row"><span class="pcr-key bg-applause">Applause</span><span class="pcr-val">Audience-driven broadband event between pieces. Clapping, cheering, whistles, encore calls.</span></div>
+          <div class="segment-criteria-row"><span class="pcr-key bg-ambient">Ambient</span><span class="pcr-val">Concert is on but no foreground activity. Room tone, instrument tuning, audience hush, breath between movements.</span></div>
+          <div class="segment-criteria-row"><span class="pcr-key bg-pre_concert">Pre_Concert</span><span class="pcr-val">Before the first programmed piece begins. Defined by time, not by sound &mdash; anything before the first sustained Performance run.</span></div>
+          <div class="segment-criteria-row"><span class="pcr-key bg-intermission">Intermission</span><span class="pcr-val">An announced or implicit break between sets. Defined by time, not by sound &mdash; long quiet stretches mid-show.</span></div>
+          <div class="segment-criteria-foot muted">Priority when classes co-occur: Applause &gt; MC_Talk &gt; Performance &gt; Tuning &gt; Quiet (the most acoustically distinctive event wins).</div>
+        </div>
+      </details>
+    </div>
+
+    <div class="card posterior">
+      <div class="card-label"><span data-i18n="card.post.label">Per-second posterior</span> <span class="muted" data-i18n="card.post.sub">(6 segment classes: 4 encoder posteriors + 2 heuristic-only)</span></div>
+      <div id="posterior-list" class="posterior-list">
+        <!-- rows injected by cuesheet.js -->
+      </div>
+    </div>
+  </section>
+
+  <section class="panels panels-flip">
+    <div class="card audioset">
+      <div class="card-label"><span data-i18n="card.audioset.label">Encoder raw output</span> <span class="muted" data-i18n="card.audioset.sub">(top-7 AudioSet classes activated this second)</span></div>
+      <div id="audioset-top" class="posterior-list">
+        <!-- rows injected per second by cuesheet.js -->
+      </div>
+    </div>
+    <div class="card mapping">
+      <div class="card-label"><span data-i18n="card.mapping.label">Group mapping</span> <span class="muted" data-i18n="card.mapping.sub">(AudioSet &rarr; concert classes)</span></div>
+      <div class="group-map">
+        <div class="gmap-row" data-gmap-full="140 classes: the AudioSet Music and Musical instrument subtrees plus the singing family — Music; Musical instrument; Singing; Choir; Male / Female / Child singing; Rapping; Humming; Guitar; Electric / Bass / Acoustic guitar; Piano; Drum; Violin; Saxophone; Orchestra; Jazz; Opera; Heavy metal; Electronic music; and the remaining instrument and genre classes of those subtrees.">
+          <span class="bg-perf gmap-dot"></span><span class="gmap-text">Performance &larr; <em>Music + instrument subtrees + singing (140)</em></span>
+          <button type="button" class="gmap-info" title="See full AudioSet class list">&#9432;</button></div>
+        <div class="gmap-row" data-gmap-full="6 classes: Speech; Male speech, man speaking; Female speech, woman speaking; Child speech, kid speaking; Narration, monologue; Speech synthesizer.">
+          <span class="bg-mc gmap-dot"></span><span class="gmap-text">MC&nbsp;talk &larr; <em>Speech / Narration family (6)</em></span>
+          <button type="button" class="gmap-info" title="See full AudioSet class list">&#9432;</button></div>
+        <div class="gmap-row" data-gmap-full="15 classes: Clapping; Cheering; Applause; Crowd; Shout; Whoop; Yell; Children shouting; Screaming; Laughter; Chuckle, chortle; Whistle; Rain; Raindrop; Rain on surface (the rain triplet fires on dense applause and was validated against the hand labels).">
+          <span class="bg-applause gmap-dot"></span><span class="gmap-text">Applause &larr; <em>Clapping, Cheering, Crowd + 12 more (15)</em></span>
+          <button type="button" class="gmap-info" title="See full AudioSet class list">&#9432;</button></div>
+        <div class="gmap-row" data-gmap-full="9 classes: Silence; Chatter; Hubbub, speech noise, speech babble; Children playing; Inside, small room; Inside, large room or hall; Inside, public space; Reverberation; Echo.">
+          <span class="bg-ambient gmap-dot"></span><span class="gmap-text">Ambient &larr; <em>Silence + venue acoustics / babble (9)</em></span>
+          <button type="button" class="gmap-info" title="See full AudioSet class list">&#9432;</button></div>
+        <div class="gmap-row gmap-foot muted" data-gmap-full="Pre-concert is back-filled from the first sustained Performance run; Intermission is a sustained quiet run after the show has started. Both come from causal state machines, not from AudioSet classes.">
+          <span class="gmap-text">Pre-concert &amp; Intermission &larr; causal rules (no AudioSet mapping)</span>
+          <button type="button" class="gmap-info" title="How these are derived">&#9432;</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Ribbon export bar: lets a viewer download the model's per-second
+       predictions or the hand-labeled GT as a YouTube-style chapter list. -->
+  <div class="ribbon-actions">
+    <span id="show-wf1" class="muted"
+          title="Pooled weighted F1 of this encoder on the selected show, against the per-second hand annotation."></span>
+    <button type="button" id="timestamps-btn" class="hdr-btn"
+            title="Export YouTube-style chapter timestamps generated by this model">
+      &#8595;&nbsp;Timestamps
+    </button>
+  </div>
+  <section class="timeline">
+    <div id="ribbon"></div>
+    <div id="playhead"></div>
+  </section>
+  <p class="excerpt-note muted" id="excerpt-note">
+    For copyright safety, audio is silenced outside the highlighted 30-second window. The ribbon shows the full precomputed segment track; only the marked region is audible.
+  </p>
+
+  <section class="scrubber-wrap">
+    <label for="scrubber" data-i18n="scrub.label">Scrub time (debug — drag to advance):</label>
+    <input id="scrubber" type="range" min="0" max="100" value="0" step="0.1" />
+    <span id="scrubber-readout" class="muted">t = 0 s</span>
+  </section>
+
+  <footer>
+    <p class="muted">
+      CPU pipeline: AudioSet-pretrained encoder &rarr; group mapping &rarr; temporal heuristics; a 30 s clip labels in 0.36 s on a 4-thread desktop CPU.
+      Six segments: pre-concert, performance, MC talk, applause, intermission, ambient (the last two from temporal heuristics).
+      <a href="https://github.com/yonghyunk1m/CueSheet/blob/main/data/CONCERT-10.tsv" target="_blank" rel="noopener">CONCERT-10</a>.
+    </p>
+    <p class="muted">
+      Gallery sources: every show available in the dropdown above is a publicly-streamed YouTube video; click the source link next to the audio player to open the original upload. No internal Yamaha recordings appear in this gallery.
+    </p>
+    <p class="muted credit">
+      CueSheet &mdash; Yonghyun Kim, Takuya Yamamoto, Ryuto Kikuchi, Alexander Lerch, Kazunobu Kondo &middot;
+      Yamaha Corporation and Georgia Institute of Technology
+      &middot; <span id="last-update" data-i18n-title="foot.lastupdate.title" title="Demo asset version — bumped on every code push"><span data-i18n="foot.lastupdate">last update</span> <span id="last-update-value">—</span></span>
+    </p>
+  </footer>
+
+</div>
+  <script src="cuesheet.js?v=2026-06-12-1839JST-mm33"></script>
+</body>
+</html>

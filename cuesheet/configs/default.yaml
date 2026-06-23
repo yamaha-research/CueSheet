@@ -1,0 +1,43 @@
+project: cuesheet
+seed: 42
+
+audio:
+  model: MIT/ast-finetuned-audioset-10-10-0.4593
+  sample_rate: 16000
+  window_sec: 2.0
+  hop_sec: 1.0
+
+fusion:
+  hidden_dim: 256
+  dropout: 0.2
+  projected_dim: 256
+  active_encoders: [ast, pann, hubert, mert]
+  classes: [Pre_Concert, Performance, MC_Talk, Applause, Intermission, Ambient]
+  multilabel_pairs: []
+
+temporal:
+  type: hmm
+  min_segment_sec: 10
+
+train:
+  batch_size: 64
+  lr: 3.0e-4
+  epochs: 30
+  val_split_by: show
+  stage1_loss_weight: 0.3
+  stage2_loss_weight: 0.7
+  beat_loss_weight: 0.1
+
+ssl:
+  temperature: 0.07
+  positive_radius: 3
+  ssl_epochs: 50
+  proj_dim: 128
+  lr: 1.0e-4
+
+pseudo:
+  n_iterations: 3
+  confidence_thresholds: [0.95, 0.90, 0.85]
+  min_segment_sec: 10
+  max_pseudo_ratio: 0.7
+  epochs_per_iter: [10, 8, 6]

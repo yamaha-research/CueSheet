@@ -1,0 +1,880 @@
+:root, :root[data-theme="dark"] {
+  --bg: #0c0e14;
+  --panel: #161924;
+  --panel-2: #1f2330;
+  --text: #e6e8ee;
+  --muted: #7d8597;
+  --accent: #ff7d3b;
+  --accent-2: #4ea8ff;
+
+  --segment-pre: #4ea8ff;
+  --segment-perf: #ff7d3b;
+  --segment-mc: #d8c044;
+  --segment-applause: #ff5e7e;
+  --segment-intermission: #8c8c8c;
+  --segment-ambient: #4a4f60;
+
+  --playhead: #ffffff;
+  --playhead-glow: rgba(255, 255, 255, 0.7);
+  --frontier: rgba(230, 232, 238, 0.55);
+  --hairline: #20232f;
+  --btn-hover-bg: #232838;
+}
+
+:root[data-theme="light"] {
+  --bg: #f5f6f8;
+  --panel: #ffffff;
+  --panel-2: #eef0f4;
+  --text: #1c2030;
+  --muted: #5a6275;
+  --accent: #d35a1f;
+  --accent-2: #2a78c4;
+
+  --segment-pre: #2a78c4;
+  --segment-perf: #d35a1f;
+  --segment-mc: #b59118;
+  --segment-applause: #c43a5c;
+  --segment-intermission: #707380;
+  --segment-ambient: #c4c8d0;
+
+  --playhead: #1c2030;
+  --playhead-glow: rgba(28, 32, 48, 0.45);
+  --frontier: rgba(28, 32, 48, 0.45);
+  --hairline: #d6dae2;
+  --btn-hover-bg: #dde1ea;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; height: 100%; background: var(--bg); color: var(--text);
+  font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+body { overflow-x: hidden; overflow-y: auto; display: flex; justify-content: center; align-items: flex-start; }
+/* The whole demo is one fixed-design stage scaled by JS to fill exactly
+   one screen — larger in fullscreen, never scrolling, no dead space. */
+#stage { width: 1400px; flex-shrink: 0; transform-origin: center; }
+
+header {
+  padding: 12px 36px 9px;
+  border-bottom: 1px solid #20232f;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 24px;
+}
+header h1 { margin: 0; font-size: 27px; font-weight: 700; letter-spacing: -0.02em; }
+header h1 small { display: block; font-size: 15px; font-weight: 400; color: var(--muted); margin-top: 3px; }
+header .tag { margin: 6px 0 0; color: var(--muted); font-size: 13px; }
+.hdr-aux { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+.video-mode header h1 { font-size: 41px; }
+.video-mode header h1 small { font-size: 20px; margin-top: 5px; }
+.video-mode header .tag { font-size: 16px; margin-top: 9px; }
+.hdr-monitor {
+  width: 220px; max-height: 124px; background: #000;
+  border: 1px solid #2c3142; border-radius: 8px;
+}
+/* Link-based header buttons (e.g. About) must not show the browser's
+   default link underline; button-based siblings never had one. */
+a.hdr-btn { text-decoration: none; }
+.hdr-btn {
+  background: var(--panel-2); color: var(--text);
+  border: 1px solid #2c3142; border-radius: 6px;
+  padding: 8px 14px; cursor: pointer; font: inherit; font-size: 13px;
+}
+.hdr-btn:hover { background: var(--btn-hover-bg); }
+
+.picker {
+  padding: 7px 36px;
+  display: flex; align-items: center; gap: 14px;
+  background: var(--panel);
+}
+.picker .spacer { flex: 1; }
+.picker .upload {
+  background: var(--panel-2); color: var(--accent);
+  padding: 8px 14px; border-radius: 6px;
+  border: 1px dashed #2c3142;
+  cursor: pointer; font-size: 13px;
+  white-space: nowrap; flex-shrink: 0; text-align: center;
+}
+.picker .upload:hover { background: #232838; }
+/* Status messages can be long (upload progress, decode errors, causal
+   segment); give them their own full-width row below the picker so they
+   never squeeze the controls or wrap into a narrow column. */
+.status-row {
+  padding: 4px 36px 8px;
+  background: var(--panel);
+  font-size: 12px; color: var(--muted);
+  min-height: 20px;
+}
+.status-row #upload-status { display: block; }
+
+/* Collapsible "How does it work?" explainer below the pipeline. Stays
+   collapsed by default so it doesn't crowd the first-load layout, but
+   one click reveals the cold-start / HMM-memory / heuristic notes
+   otherwise tucked away in the docs. */
+.howitworks {
+  margin: 8px 36px 0;
+  background: var(--panel); border: 1px solid #20232f; border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+}
+.howitworks summary {
+  cursor: pointer; color: var(--accent-2);
+  font-weight: 600; padding: 4px 0;
+  list-style: none;
+}
+.howitworks summary::before { content: "▸ "; }
+.howitworks[open] summary::before { content: "▾ "; }
+.howitworks-body {
+  padding: 6px 0 8px;
+  color: var(--text); line-height: 1.55;
+}
+.howitworks-body p { margin: 6px 0; }
+.howitworks-body strong { color: var(--accent); }
+.howitworks-body em { color: var(--accent-2); font-style: normal; font-weight: 600; }
+.picker .livepick {
+  display: inline-flex; align-items: stretch; flex-shrink: 0;
+  border: 1px solid #2c3142; border-radius: 6px; overflow: hidden;
+  background: var(--panel-2);
+}
+.picker .livepick .live-btn {
+  background: transparent; color: var(--accent-2);
+  padding: 8px 12px;
+  border: 0; border-radius: 0;
+  cursor: pointer; font: inherit; font-size: 13px; font-weight: 600;
+  white-space: nowrap; text-align: center;
+}
+.picker .livepick .live-btn + .live-btn { border-left: 1px solid #2c3142; }
+.picker .livepick .live-btn:hover { background: #232838; }
+.picker .livepick .live-btn.recording {
+  background: var(--segment-applause); color: #2c0712; font-weight: 700;
+}
+.picker .livepick .live-btn.active {
+  background: var(--accent-2); color: #06121f; font-weight: 700;
+}
+.picker .modepick {
+  display: inline-flex; flex-shrink: 0;
+  border: 1px solid #2c3142; border-radius: 6px; overflow: hidden;
+}
+.picker .mode-btn {
+  background: var(--panel-2); color: var(--muted); border: none;
+  padding: 7px 12px; cursor: pointer; font: inherit; font-size: 12px;
+  white-space: nowrap;
+}
+.picker .mode-btn + .mode-btn { border-left: 1px solid #2c3142; }
+.picker .mode-btn.active { background: var(--accent-2); color: #06121f; font-weight: 600; }
+.picker label { color: var(--muted); white-space: nowrap; flex-shrink: 0; }
+.picker select {
+  background: var(--panel-2); color: var(--text);
+  border: 1px solid #2c3142; border-radius: 6px;
+  padding: 8px 12px; font: inherit; min-width: 320px;
+}
+.badge {
+  background: var(--panel-2); color: var(--accent-2);
+  padding: 4px 10px; border-radius: 999px; font-size: 12px;
+  border: 1px solid #2c3142; white-space: nowrap; flex-shrink: 0;
+}
+
+.player {
+  padding: 6px 36px;
+  background: var(--panel);
+}
+.player audio { width: 100%; }
+.live-waveform {
+  width: 100%; height: 54px; display: block;
+  background: #0d1018; border-radius: 6px;
+}
+.live-playback { width: 100%; }
+.live-waveform[hidden], .live-playback[hidden] { display: none; }
+
+.panels {
+  display: grid; grid-template-columns: 1fr 2fr; gap: 18px;
+  padding: 13px 36px;
+}
+.card {
+  background: var(--panel); border: 1px solid #20232f; border-radius: 12px;
+  padding: 14px 16px;
+}
+.card-label { color: var(--muted); font-size: 12px; text-transform: uppercase;
+  letter-spacing: 0.08em; margin-bottom: 7px;
+  /* keep-all stops JA/KO from breaking mid-phrase — without it the
+     parenthetical "（…流れ込むか）" leaves "か）" alone on its own line.
+     overflow-wrap stays "break-word" as the last-resort fallback for any
+     CJK string that would actually overflow its container. */
+  word-break: keep-all; overflow-wrap: break-word; }
+
+/* Current-segment readout: a bold filled pill in the segment color. This is
+   the strongest signal on the page and the focal point of a screenshot,
+   matching the teaser capture rather than a thin colored border. */
+/* Current-segment card: center the pill so the panel does not read as
+   mostly empty next to the taller posterior card. */
+.card.now {
+  display: flex; flex-direction: column;
+  justify-content: space-evenly; align-items: center; gap: 10px;
+}
+.card.now .card-label { margin-bottom: 0; }
+.segment-now {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 280px; min-height: 66px; padding: 10px 40px;
+  font-size: 35px; font-weight: 800; letter-spacing: -0.01em;
+  border-radius: 999px;
+  background: var(--panel-2); color: var(--text);
+}
+.segment-now.segment-pre          { background: var(--segment-pre);          color: #06121f; }
+.segment-now.segment-perf         { background: var(--segment-perf);         color: #1f0d02; }
+.segment-now.segment-mc           { background: var(--segment-mc);           color: #1d1804; }
+.segment-now.segment-applause     { background: var(--segment-applause);     color: #2c0712; }
+.segment-now.segment-intermission { background: var(--segment-intermission); color: #0c0e14; }
+.segment-now.segment-ambient      { background: var(--segment-ambient);      color: #e6e8ee; }
+/* "(listening…)" while the first causal prediction is in flight — visually
+   distinct from the Ambient segment (above) so the user can never mistake
+   the warm-up segment for an actual Ambient classification. */
+.segment-now.segment-listening    { background: #1c2030; color: #8892a3;
+                                 font-style: italic; font-weight: 500; }
+
+.dt-value {
+  font-size: 96px; font-weight: 800; letter-spacing: -0.04em;
+  line-height: 1; color: var(--accent); font-variant-numeric: tabular-nums;
+}
+.dt-unit { color: var(--muted); margin-top: 4px; }
+#dt-bar {
+  height: 10px; background: var(--panel-2); border-radius: 5px;
+  margin-top: 18px; overflow: hidden;
+}
+#dt-bar-fill {
+  height: 100%; background: linear-gradient(90deg, var(--accent-2), var(--accent));
+  width: 0%; transition: width 100ms linear;
+}
+
+/* Pipeline block diagram — visualizes data flow through the pipeline stages */
+.pipeline {
+  display: flex; align-items: center; gap: 8px;
+  padding: 11px 36px 2px;
+}
+/* explicit [hidden] override — display:flex above otherwise wins
+   over the browser-default display:none and the row stays visible. */
+.pipeline[hidden], .scrubber-wrap[hidden] { display: none; }
+
+/* upload modality picker dialog (shown only when a video file is chosen) */
+.modeq {
+  border: 1px solid #2c3142; border-radius: 12px;
+  background: var(--panel); color: var(--text);
+  padding: 22px 26px; max-width: 480px;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.55);
+}
+.modeq::backdrop { background: rgba(0, 0, 0, 0.55); }
+.modeq h3 { margin: 0 0 8px; font-size: 16px; }
+.modeq p { margin: 0 0 14px; font-size: 13px; color: var(--muted); }
+.modeq-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.modeq-btn {
+  flex: 1; min-width: 110px;
+  background: var(--panel-2); color: var(--accent-2);
+  padding: 9px 12px; border-radius: 6px;
+  border: 1px solid #2c3142; cursor: pointer;
+  font: inherit; font-size: 13px; font-weight: 600;
+}
+.modeq-btn:hover { background: var(--accent-2); color: #06121f; border-color: var(--accent-2); }
+.pipeline .pipe-stage {
+  position: relative;
+  flex: 1; background: var(--panel); border: 1px solid #20232f;
+  border-radius: 10px; padding: 7px 14px; min-height: 44px;
+  display: flex; flex-direction: column; justify-content: center;
+  text-align: center;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+.pipeline #pipe-pann { cursor: pointer; }
+.pipeline .pipe-stage.active {
+  border-color: var(--accent);
+  background: linear-gradient(180deg, rgba(255,125,59,0.08), var(--panel));
+}
+.pipeline .pipe-title {
+  font-size: 12px; font-weight: 600; color: var(--text);
+  letter-spacing: 0.04em;
+  /* keep-all stops the browser from breaking inside a CJK / katakana word
+     like "ヒューリスティック". Lines now wrap only at spaces and ASCII
+     punctuation, so JA/KO labels split cleanly between phrases. */
+  word-break: keep-all; overflow-wrap: break-word;
+}
+.pipeline .pipe-detail {
+  font-size: 11px; color: var(--muted); margin-top: 2px;
+  font-variant-numeric: tabular-nums;
+  word-break: keep-all; overflow-wrap: break-word;
+}
+.pipeline .pipe-switch { position: relative; cursor: pointer; }
+.pipeline .pipe-switch:hover { border-color: var(--accent); }
+.pipeline .pipe-switch:focus-visible { outline: 2px solid var(--accent); }
+.pipe-caret {
+  font-size: 9px; color: var(--muted); margin-left: 5px;
+  vertical-align: 1px;
+}
+.encoder-menu {
+  position: absolute; top: calc(100% + 6px); left: 50%;
+  transform: translateX(-50%); z-index: 30;
+  background: var(--panel); border: 1px solid #2c3142;
+  border-radius: 10px; padding: 5px; min-width: 230px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+  display: flex; flex-direction: column; gap: 2px;
+}
+.encoder-menu[hidden] { display: none; }
+.encoder-menu-head {
+  font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--muted); padding: 4px 8px 3px;
+}
+.encoder-opt {
+  display: flex; flex-direction: column; gap: 1px;
+  background: transparent; border: 0; border-radius: 7px;
+  padding: 6px 9px; text-align: left; cursor: pointer;
+  color: var(--text); font-size: 12px; font-weight: 600;
+  font-family: inherit;
+}
+.encoder-opt span {
+  font-size: 10px; font-weight: 400; color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.encoder-opt:hover { background: #20232f; }
+.encoder-opt.active { background: var(--accent-2); color: #06121f; }
+.encoder-opt.active span { color: rgba(6, 18, 31, 0.7); }
+/* Light theme: the dark-blue accent reads heavy as a row fill — use a
+   light blue tint with dark text instead. */
+:root[data-theme="light"] .encoder-opt:hover { background: #e8eef7; }
+:root[data-theme="light"] .encoder-opt.active { background: #d8e9fb; color: #114a7a; }
+:root[data-theme="light"] .encoder-opt.active span { color: rgba(17, 74, 122, 0.75); }
+.pipeline .pipe-arrow {
+  position: relative;
+  width: 48px; height: 4px;
+  background: rgba(125, 133, 151, 0.18);
+  border-radius: 2px;
+  overflow: visible;
+  /* The ::after tip extends 7px past the right edge of the shaft, which
+     would visually shift the arrow graphic 3.5px right of the gap's
+     geometric center. Translate the whole arrow left by half the tip
+     overhang so shaft + tip read as centered in the inter-stage gap. */
+  transform: translateX(-3.5px);
+}
+.pipeline .pipe-arrow::after {
+  content: ""; position: absolute;
+  right: -7px; top: 50%; transform: translateY(-50%);
+  width: 0; height: 0;
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 7px solid rgba(125, 133, 151, 0.55);
+}
+.pipeline .pipe-dot {
+  position: absolute;
+  width: 10px; height: 10px; border-radius: 50%;
+  top: 50%; left: 0;
+  transform: translate(-50%, -50%);
+  background: var(--accent);
+  box-shadow:
+    0 0 6px var(--accent),
+    0 0 14px var(--accent),
+    0 0 24px rgba(255, 125, 59, 0.55);
+  opacity: 0;
+  pointer-events: none;
+}
+@keyframes flowDot {
+  0%   { left: 0%;   opacity: 0; }
+  15%  {              opacity: 1; }
+  85%  {              opacity: 1; }
+  100% { left: 100%; opacity: 0; }
+}
+/* Single-shot pulse: triggered by JS only when a real prediction event
+   arrives (one streaming NDJSON row OR one new playback second). No
+   infinite loop, so an idle preloaded show shows no flow at all. */
+.pipe-dot.pulse {
+  animation: flowDot 0.6s linear forwards;
+}
+/* Stagger so the same logical 'data packet' arrives at each stage in
+   sequence — feels like one event traversing the pipeline. */
+.pipeline .pipe-arrow:nth-of-type(2) .pipe-dot.pulse { animation-delay: 0.00s; }
+.pipeline .pipe-arrow:nth-of-type(4) .pipe-dot.pulse { animation-delay: 0.12s; }
+.pipeline .pipe-arrow:nth-of-type(6) .pipe-dot.pulse { animation-delay: 0.24s; }
+.pipeline .pipe-arrow:nth-of-type(8) .pipe-dot.pulse { animation-delay: 0.36s; }
+
+.group-map {
+  display: grid; grid-template-rows: repeat(4, auto); gap: 8px;
+  padding: 2px 0;
+}
+.gmap-row { font-size: 13px; color: var(--text); }
+.gmap-row em { color: var(--muted); font-style: normal; }
+.gmap-dot {
+  display: inline-block; width: 12px; height: 12px; border-radius: 3px;
+  margin-right: 8px; vertical-align: middle;
+}
+
+/* CueSheet: segment + posterior */
+.panels {
+  display: grid; grid-template-columns: 0.4fr 1.6fr; gap: 14px;
+  padding: 9px 36px;
+}
+/* Second row of cards: PANN raw output (left) is the data-heavy panel
+   that needs the wide column; Group projection (right) is a tight
+   static legend and shrinks to ~2/3 of its previous width. */
+.panels.panels-flip { grid-template-columns: 1.6fr 1fr; }
+.posterior-list { display: grid; gap: 6px; }
+/* Lock every row to a fixed height so a long AudioSet class name (e.g.
+   "Electronic dance music") cannot wrap and push the whole card height
+   around. The label clips with an ellipsis and the full name stays on
+   the `title` attribute for hover. */
+.posterior-row { height: 20px; }
+.posterior-row .pname {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+/* AudioSet class names are longer and read more naturally left-aligned
+   with the ellipsis at the tail. Give them more horizontal room. */
+#audioset-top .posterior-row { grid-template-columns: 180px 1fr 40px; }
+#audioset-top .posterior-row .pname { text-align: left; }
+.heuristic-tag {
+  display: inline-block;
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border: 1px solid #2c3142;
+  padding: 1px 4px;
+  border-radius: 3px;
+  margin-left: 6px;
+  vertical-align: middle;
+  cursor: help;
+}
+.heuristic-tag:hover { color: var(--text); border-color: #3a4252; }
+.posterior-row {
+  display: grid; grid-template-columns: 160px 1fr 48px;
+  align-items: center; gap: 12px;
+}
+.posterior-row .pname { font-size: 13px; color: var(--text); text-align: right; }
+.posterior-row .ptrack {
+  position: relative; height: 12px;
+  background: var(--panel-2); border-radius: 3px; overflow: hidden;
+}
+.posterior-row .pfill {
+  position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px;
+  width: 0%;
+  transition: width 120ms ease;
+}
+.posterior-row .pval {
+  font-size: 12px; color: var(--text); text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.timeline {
+  position: relative; height: 44px; margin: 5px 36px 10px;
+  background: var(--panel); border: 1px solid var(--hairline); border-radius: 10px;
+  overflow: hidden;
+}
+#ribbon { position: relative; height: 100%; }
+#ribbon .seg {
+  /* segments are positioned absolutely (left/top/width/height set inline)
+     so the ribbon represents wall-clock time, not just the streamed
+     prefix, and so the GT row can sit above the prediction row */
+}
+/* Causal mode shows precomputed history before the switch-on point at
+   reduced opacity so it is visually distinct from the live causal output
+   that follows. */
+#ribbon .seg.dim { opacity: 0.32; }
+#ribbon .infer-frontier {
+  position: absolute; top: 0; bottom: 0;
+  width: 0; border-left: 2px dashed var(--frontier);
+  pointer-events: none;
+}
+/* Solid divider between the top "GT" strip and the bottom "Pred" strip
+   so the two rows don't read as one continuous track of the same color
+   palette. */
+#ribbon .ribbon-divider {
+  position: absolute; left: 0; right: 0;
+  top: 35%; height: 2%;
+  background: var(--bg);
+  z-index: 3;
+  pointer-events: none;
+}
+/* Striped "no GT past here" filler so GT row and prediction row end
+   at the same right edge even when the GT array is shorter than the
+   audio duration (e.g. f_7nt: GT 5967 s vs audio 6001 s). */
+#ribbon .ribbon-no-gt {
+  position: absolute;
+  background: repeating-linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.06) 0 5px,
+    rgba(255, 255, 255, 0.02) 5px 10px);
+  border: 1px dashed rgba(255, 255, 255, 0.18);
+  border-radius: 2px;
+  pointer-events: auto;
+  z-index: 1;
+}
+/* "GT" / "PRED" badges pinned at the left edge of each strip — without
+   them the two rows look identical because they share the same per-class
+   color palette. */
+#ribbon .ribbon-label {
+  position: absolute; left: 4px;
+  font-size: 9px; font-weight: 700;
+  line-height: 1;
+  padding: 2px 5px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.62);
+  color: #fff;
+  letter-spacing: 0.06em;
+  pointer-events: none;
+  z-index: 4;
+}
+#ribbon .ribbon-label-gt   { top: 4px; }
+#ribbon .ribbon-label-pred { top: 40%; }
+#playhead {
+  position: absolute; top: 0; bottom: 0; width: 2px; background: var(--playhead);
+  left: 0%; box-shadow: 0 0 8px var(--playhead-glow);
+  transition: left 100ms linear;
+}
+
+footer {
+  padding: 9px 36px 12px; color: var(--muted); font-size: 12px;
+  border-top: 1px solid var(--hairline);
+}
+footer .credit { margin-top: 5px; font-size: 11px; opacity: 0.85; }
+footer a { color: var(--accent-2); }
+.muted { color: var(--muted); }
+
+.scrubber-wrap {
+  padding: 0 36px 12px;
+  display: flex; align-items: center; gap: 14px;
+}
+.scrubber-wrap label { color: var(--muted); font-size: 12px; }
+.scrubber-wrap input[type="range"] { flex: 1; accent-color: var(--accent); }
+
+/* State color helpers (applied via JS) */
+.segment-pre { color: var(--segment-pre); border-left-color: var(--segment-pre) !important; }
+.segment-perf { color: var(--segment-perf); border-left-color: var(--segment-perf) !important; }
+.segment-mc { color: var(--segment-mc); border-left-color: var(--segment-mc) !important; }
+.segment-applause { color: var(--segment-applause); border-left-color: var(--segment-applause) !important; }
+.segment-intermission { color: var(--segment-intermission); border-left-color: var(--segment-intermission) !important; }
+.segment-ambient { color: var(--segment-ambient); border-left-color: var(--segment-ambient) !important; }
+
+.bg-pre { background-color: var(--segment-pre); }
+.bg-perf { background-color: var(--segment-perf); }
+.bg-mc { background-color: var(--segment-mc); }
+.bg-applause { background-color: var(--segment-applause); }
+.bg-intermission { background-color: var(--segment-intermission); }
+.bg-ambient { background-color: var(--segment-ambient); }
+
+/* Audible-window marker — two thick cyan vertical lines pinned to the
+   exact audible-onset second and the audible-end second, plus a soft
+   tinted band between them. The lines (not the band) are the
+   load-bearing alignment marks: when the playhead's vertical
+   centerline overlaps the cyan line's centerline, the player is
+   exactly at the audible-onset / -end moment. Cyan was picked to
+   avoid collision with the MC_Talk segment color #d8c044. */
+#ribbon .audible-line {
+  position: absolute;
+  top: -6px;
+  height: calc(100% + 12px);
+  width: 4px;
+  margin-left: -2px;   /* center the 4-px line on the seconds-mark */
+  background: #00e5ff;
+  box-shadow: 0 0 8px rgba(0, 229, 255, 0.95),
+              0 0 16px rgba(0, 229, 255, 0.55);
+  pointer-events: none;
+  z-index: 5;
+  border-radius: 2px;
+}
+#ribbon .audible-band {
+  position: absolute;
+  top: -2px;
+  height: calc(100% + 4px);
+  background: rgba(0, 229, 255, 0.12);
+  border-top: 1px dashed rgba(0, 229, 255, 0.55);
+  border-bottom: 1px dashed rgba(0, 229, 255, 0.55);
+  pointer-events: none;
+  z-index: 3;
+}
+/* Floating "♪ 25:53–26:23" label, centered over the audible-window
+   box (translateX(-50%) + left = box center). transform-origin keeps
+   the label fixed in place even if its width changes per show. */
+#ribbon .audible-window-label {
+  position: absolute;
+  top: -22px;
+  transform: translateX(-50%);
+  font-size: 11px;
+  font-weight: 700;
+  color: #00e5ff;
+  background: rgba(0, 0, 0, 0.82);
+  border: 1px solid #00e5ff;
+  padding: 2px 7px;
+  border-radius: 3px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 5;
+  letter-spacing: 0.02em;
+  text-shadow: 0 0 4px rgba(0, 229, 255, 0.6);
+}
+/* Striped filler for the prediction strip past the last computed
+   second — pred ends ~10 s before the audio (mp3 encoder padding),
+   so without this the playhead enters a visually empty area near
+   the right edge while the audio keeps playing. */
+#ribbon .ribbon-no-pred {
+  position: absolute;
+  background: repeating-linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.05) 0 5px,
+    rgba(255, 255, 255, 0.02) 5px 10px);
+  border: 1px dashed rgba(255, 255, 255, 0.16);
+  border-radius: 2px;
+  pointer-events: auto;
+  z-index: 1;
+}
+.excerpt-note {
+  font-size: 12px;
+  margin: 6px 0 0;
+  text-align: center;
+}
+
+/* Audible-window hint shown next to the audio player when the catalog
+   provides excerpt metadata. Cyan to match the audible-window box on
+   the ribbon — they describe the same region, so they should read as
+   one visual system. */
+/* Inline segment-class criteria reference. Collapsed by default so the
+   Current State card stays compact; expands in place. Color chip on
+   each row reuses the per-segment palette so the reader can map ribbon
+   colors to class definitions without leaving the page. */
+.segment-criteria {
+  margin-top: 0;
+  padding: 6px 10px;
+  background: var(--panel-2, rgba(255,255,255,0.04));
+  border: 1px solid var(--hairline, rgba(255,255,255,0.10));
+  border-radius: 4px;
+  font-size: 12px;
+}
+.segment-criteria > summary {
+  cursor: pointer;
+  color: var(--text);
+  font-weight: 600;
+  padding: 2px 0;
+  outline: none;
+}
+.segment-criteria[open] > summary { margin-bottom: 6px; }
+/* Open state breaks out of the narrow current-segment card: the body becomes
+   an absolutely positioned sheet spanning the whole panels row (the grid
+   container is the positioning context), laid out in three columns. */
+.panels { position: relative; }
+.segment-criteria-body { display: flex; flex-direction: column; gap: 6px; }
+.segment-criteria[open] .segment-criteria-body {
+  position: absolute; left: 0; right: 0; z-index: 25;
+  background: var(--panel);
+  border: 1px solid var(--hairline); border-radius: 12px;
+  padding: 14px 16px; margin-top: 8px;
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px 20px;
+  box-shadow: 0 14px 44px rgba(0, 0, 0, 0.45);
+}
+:root[data-theme="light"] .segment-criteria[open] .segment-criteria-body {
+  box-shadow: 0 14px 44px rgba(20, 25, 35, 0.18);
+}
+.segment-criteria[open] .segment-criteria-foot { grid-column: 1 / -1; }
+.segment-criteria-row { display: flex; align-items: flex-start; gap: 10px; }
+.pcr-key {
+  flex: 0 0 100px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  color: #fff;
+  font-weight: 700;
+  font-size: 11px;
+  text-align: center;
+  white-space: nowrap;
+}
+.pcr-val { flex: 1; color: var(--text); line-height: 1.45; }
+.segment-criteria-foot {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--hairline, rgba(255,255,255,0.10));
+  font-size: 11px;
+  line-height: 1.45;
+}
+.segment-criteria-foot a { color: var(--accent, #ff8c4d); text-decoration: underline; }
+
+.audible-hint {
+  margin-top: 8px;
+  padding: 6px 12px;
+  background: rgba(0, 229, 255, 0.10);
+  border-left: 3px solid #00e5ff;
+  border-radius: 3px;
+  font-size: 13px;
+  color: var(--text);
+}
+.audible-hint #audible-hint-range {
+  font-weight: 600;
+}
+
+/* Docker HF Space deployment: encoder-swap now resolves to backend
+   (FastAPI causal mode) and to precomputed gallery JSON (data/{show}_{encoder}.json)
+   so the dropdown is enabled. The earlier static build hid this entirely
+   with !important; that rule is removed. */
+
+/* Source-of-record button in the picker row, always visible regardless
+   of audio/video mode. Every show in this gallery is a publicly-
+   streamed YouTube video; the button opens the uploader's original
+   page in a new tab so anyone can verify provenance with one
+   click. */
+/* Source-link pill. Sizes to its own content ('Source ↗') so the
+   label reads inside the background. The ↗ glyph signals 'opens in
+   a new tab' rather than 'play', which was the user-flagged
+   confusion with the older ▶ icon. */
+.source-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  text-decoration: none;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  white-space: nowrap;
+  line-height: 1;
+  box-sizing: border-box;
+}
+.source-btn #source-btn-icon {
+  display: inline-block;
+  line-height: 1;
+  font-size: 13px;
+}
+.source-btn #source-btn-text:empty { display: none; }
+.source-btn-link {
+  background: #c4302b;        /* YouTube red */
+  color: #fff;
+  border: 1px solid #c4302b;
+}
+.source-btn-link:hover {
+  background: #a72822;
+  border-color: #a72822;
+}
+
+/* Timestamps export button + popup. Keeps the Model/Hand-labeled GT
+   source toggle since every gallery show includes GT. */
+.ribbon-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 36px 4px;
+  gap: 8px;
+}
+#show-wf1 {
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+}
+.ribbon-actions .hdr-btn {
+  padding: 4px 10px;
+  font-size: 12px;
+}
+.timestamps-popup-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 200;
+}
+.timestamps-popup {
+  background: var(--panel);
+  border: 1px solid #20232f;
+  border-radius: 12px;
+  padding: 22px 24px;
+  max-width: 720px;
+  width: calc(100% - 64px);
+  max-height: calc(100vh - 80px);
+  display: flex; flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  color: var(--text);
+}
+.timestamps-popup-title { font-size: 16px; font-weight: 700; letter-spacing: -0.01em; }
+.timestamps-popup-sub { font-size: 12px; line-height: 1.5; }
+.timestamps-popup-tabs { display: flex; gap: 8px; align-items: center; }
+.timestamps-popup-tab {
+  background: transparent;
+  border: 1px solid #2c3142;
+  color: var(--text);
+  padding: 5px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+}
+.timestamps-popup-tab.active {
+  background: var(--accent);
+  color: #1a0e05;
+  border-color: var(--accent);
+}
+.timestamps-popup-pre {
+  flex: 1 1 auto;
+  min-height: 240px;
+  max-height: 50vh;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid #2c3142;
+  border-radius: 6px;
+  padding: 12px;
+  font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text);
+  resize: none;
+  white-space: pre;
+  overflow: auto;
+}
+.timestamps-popup-actions { display: flex; gap: 8px; justify-content: flex-end; }
+.timestamps-popup-btn {
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid #2c3142;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.timestamps-popup-btn:hover { background: rgba(255,255,255,0.08); }
+.timestamps-popup-close { color: var(--muted); }
+
+
+/* Group-mapping info button + popup. */
+.gmap-row { display: flex; align-items: baseline; gap: 6px; }
+.gmap-text { min-width: 0; }
+.gmap-info {
+  margin-left: auto; flex: 0 0 auto;
+  background: transparent; border: 0; color: var(--muted);
+  cursor: pointer; font-size: 14px; line-height: 1;
+  padding: 2px 4px; border-radius: 50%; min-width: 20px;
+  transition: color 100ms, background 100ms;
+}
+.gmap-info:hover { color: var(--text); background: var(--btn-hover-bg, rgba(255,255,255,0.08)); }
+.gmap-info:focus { outline: 1px solid var(--accent); outline-offset: 1px; }
+.gmap-popup {
+  position: fixed; z-index: 100; max-width: 420px;
+  padding: 12px 14px; background: var(--panel);
+  border: 1px solid #20232f; border-radius: 10px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+  color: var(--text); font-size: 13px; line-height: 1.55;
+}
+.gmap-popup-title {
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--muted); margin-bottom: 8px;
+}
+.gmap-popup-body { word-wrap: break-word; }
+.gmap-popup-close {
+  position: absolute; top: 8px; right: 10px;
+  background: transparent; border: 0; color: var(--muted);
+  font-size: 16px; cursor: pointer; padding: 0;
+}
+.gmap-popup-close:hover { color: var(--text); }
+:root[data-theme="light"] .gmap-popup {
+  background: #ffffff; border-color: #d9dee5;
+  box-shadow: 0 10px 40px rgba(20,25,35,0.18);
+}
+.gmap-foot {
+  margin-top: 4px; padding-top: 6px;
+  border-top: 1px dashed var(--hairline); font-size: 12px;
+}
+/* The grid row stretches both cards to equal height, so whichever side
+   has less content gets a blank band under its last row. Let both lists
+   flex-fill their card and distribute the leftover height between rows
+   instead. */
+.card.audioset { display: flex; flex-direction: column; }
+.card.audioset .posterior-list { flex: 1; align-content: space-evenly; }
+.card.mapping { display: flex; flex-direction: column; }
+.card.mapping .group-map { flex: 1; align-content: space-evenly; }
+.card.posterior { display: flex; flex-direction: column; }
+.card.posterior .posterior-list { flex: 1; align-content: space-evenly; }
+
+/* Brand wordmark: "Sheet" carries the accent, matching the landing page
+   and the icon's bar palette. Light theme inherits its darker accent. */
+h1 .brand-em { color: var(--accent); }

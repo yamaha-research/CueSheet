@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96">
+  <!-- CueSheet mark: four segment-ribbon bars in a rounded tile.
+       Palette: Performance, MC talk, Applause, Pre-concert. -->
+  <rect x="4" y="4" width="88" height="88" rx="22" fill="#12141d" stroke="#f2f4f8" stroke-width="5"/>
+  <rect x="15" y="16" width="12" height="64" rx="4" fill="#ff7d3b"/>
+  <rect x="33" y="16" width="12" height="64" rx="4" fill="#d8c044"/>
+  <rect x="51" y="16" width="12" height="64" rx="4" fill="#ff5e7e"/>
+  <rect x="69" y="16" width="12" height="64" rx="4" fill="#4ea8ff"/>
+</svg>
