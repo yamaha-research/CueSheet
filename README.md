@@ -14,7 +14,7 @@ Ryuto Kikuchi<sup>♭</sup> ·
 
 <sup>♭</sup>Yamaha Corporation · <sup>♯</sup>Georgia Tech
 
-![arXiv](https://img.shields.io/badge/arXiv-preprint%20coming%20soon-b31b1b?style=for-the-badge)
+[![DOI](https://img.shields.io/badge/DOI-10.1145%2F3767308.3839016-b31b1b?style=for-the-badge)](https://doi.org/10.1145/3767308.3839016)
 [![Live demo](https://img.shields.io/badge/🤗%20Space-Try%20it%20live-orange?style=for-the-badge)](https://yonghyunk1m-cue-sheet.hf.space)
 [![Project page](https://img.shields.io/badge/Project%20page-About%20CueSheet-5ec8f8?style=for-the-badge)](https://yonghyunk1m-cue-sheet.hf.space/about)
 [![Dataset](https://img.shields.io/badge/Dataset-CONCERT--10%20v1.0-1976d2?style=for-the-badge)](data/CONCERT-10.tsv)
@@ -103,19 +103,20 @@ Numbers and figures: [`docs/ABLATION_RESULTS.md`](docs/ABLATION_RESULTS.md), [`d
 
 ## Citation
 
-An arXiv preprint is in preparation. The BibTeX below will be finalized with the
-arXiv identifier upon release.
+This work will appear in the Proceedings of the 34th ACM International
+Conference on Multimedia (MM '26). Please cite:
 
 ```bibtex
-@misc{cuesheet2026,
-  title         = {CueSheet: Live Demo of Multi-Genre Concert Segment Detection},
-  author        = {Kim, Yonghyun and Yamamoto, Takuya and Kikuchi, Ryuto and
-                   Lerch, Alexander and Kondo, Kazunobu},
-  year          = {2026},
-  eprint        = {2606.xxxxx},
-  archivePrefix = {arXiv},
-  primaryClass  = {cs.SD},
-  url           = {https://arxiv.org/abs/2606.xxxxx},
+@inproceedings{cuesheet2026,
+  title     = {CueSheet: Live Demo of Multi-Genre Concert Segment Detection},
+  author    = {Kim, Yonghyun and Yamamoto, Takuya and Kikuchi, Ryuto and
+               Lerch, Alexander and Kondo, Kazunobu},
+  booktitle = {Proceedings of the 34th ACM International Conference on Multimedia (MM '26)},
+  year      = {2026},
+  publisher = {Association for Computing Machinery},
+  address   = {New York, NY, USA},
+  doi       = {10.1145/3767308.3839016},
+  isbn      = {979-8-4007-2213-4},
 }
 ```
 
